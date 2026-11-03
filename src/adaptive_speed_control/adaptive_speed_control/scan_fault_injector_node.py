@@ -8,7 +8,7 @@ from collections import deque
 import yaml
 import rclpy
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data, QoSProfile
+from rclpy.qos import qos_profile_sensor_data, QoSProfile, ReliabilityPolicy
 from rclpy.parameter import Parameter
 from rcl_interfaces.msg import SetParametersResult
 from sensor_msgs.msg import LaserScan
@@ -66,12 +66,15 @@ class ScanFaultInjectorNode(Node):
         self.last_input_time = 0.0
         self.last_pub_time = 0.0
 
-        # QoS profile: Best Effort for sensor data
+        # Gazebo's parameter bridge currently offers /scan_raw as RELIABLE.
+        # Request reliable delivery at this ingress point; the downstream
+        # controller-facing /scan deliberately remains sensor-data BEST_EFFORT.
+        raw_qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.RELIABLE)
         self.scan_sub = self.create_subscription(
             LaserScan,
             '/scan_raw',
             self.on_scan_raw,
-            qos_profile_sensor_data
+            raw_qos
         )
 
         self.scan_pub = self.create_publisher(
@@ -288,4 +291,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
