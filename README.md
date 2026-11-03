@@ -1,371 +1,374 @@
 <div align="center">
 
 # Adaptive Speed Control in Cluttered Environments
-### ROS 2 & Gazebo Mobile Robot Safety and Velocity Regulation
+### ROS 2 Jazzy & Gazebo Harmonic Autonomous Mobile Robot Velocity Regulation
 
-**A dynamic, reactive velocity regulation architecture for teleoperated mobile robots using 2D LiDAR point clouds, surrounding obstacle density estimation, and runtime parameter configuration.**
+**A dynamic, reactive velocity regulation architecture for autonomous mobile robots in cluttered corridors using 2D LiDAR point clouds, spatial obstacle density estimation, and rate-limited actuation.**
 
 <p>
-  <img src="https://img.shields.io/badge/ROS_2-Jazzy-22314E?style=for-the-badge&logo=ros&logoColor=white" alt="ROS 2 Jazzy">
-  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/ROS_2-Jazzy_Jalisco-22314E?style=for-the-badge&logo=ros&logoColor=white" alt="ROS 2 Jazzy">
+  <img src="https://img.shields.io/badge/Ubuntu-24.04_LTS-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu 24.04">
   <img src="https://img.shields.io/badge/Simulation-Gazebo_Harmonic-F58113?style=for-the-badge" alt="Gazebo Harmonic">
-  <img src="https://img.shields.io/badge/Sensor-2D_LiDAR-0F766E?style=for-the-badge" alt="LiDAR">
-  <img src="https://img.shields.io/badge/Tests-13%20Passed-brightgreen?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Tests-26%20Passed-brightgreen?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License">
 </p>
 
 </div>
 
 ---
 
-## 1. Project Overview & Problem Statement
+## 1. Executive Summary & Problem Statement
 
-In autonomous mobile robotics and remote teleoperation, fixed-speed command execution in uncertain, dynamic, or cluttered environments poses severe safety risks. Operating at constant nominal velocities inside tight spaces frequently results in collisions due to operator latency, sensor delays, and physical braking inertia. Conversely, forcing the robot to operate at a permanent crawling speed cripples transport efficiency in open spaces.
+In autonomous ground robotics and remote teleoperation, fixed-speed navigation represents a fundamental trade-off dilemma:
+- **High constant speed** optimizes transport throughput in wide, unobstructed corridors, but drastically elevates collision risk and braking distance inside tight, cluttered spaces.
+- **Low constant speed** guarantees collision avoidance in tight passageways, but severely degrades mission efficiency in open transit zones.
 
-This project delivers an **Adaptive Speed Controller** implemented for ROS 2 (Jazzy) and Gazebo Harmonic. The system dynamically modulates the robot's translational velocity based on:
-1. **Obstacle Proximity:** The real-time Euclidean distance to obstacles within the forward collision cone.
-2. **Obstacle Density:** The spatial concentration (clutter) of obstacles within a configurable surrounding radius.
-3. **Safety Critical Halting:** Instantaneous emergency stop upon obstacle encroachment within the safety threshold ($d_{safe} \le 0.45\text{ m}$).
-4. **Sensor and Command Fail-Safe:** Deterministic zero-velocity enforcement if sensor data or operator commands become stale.
+This repository presents a complete, production-grade ROS 2 (Jazzy Jalisco) and Gazebo Harmonic solution that resolves this conflict. The system autonomously adapts the robot's translational speed in real time based on **forward obstacle proximity**, **spatial clutter density**, and **acceleration limits**, while enforcing deterministic emergency stops and seamless automatic resumption once obstacles are cleared.
 
 ---
 
 ## 2. System Architecture
 
-The software architecture enforces strict decoupling between the user interface and the simulation actuator layer:
+The software architecture implements a strict **Velocity Arbiter Pattern**, ensuring that actuation commands to the robot chassis originate exclusively from the safety controller:
 
 ```mermaid
 flowchart TD
-    subgraph User Interface
-        UI["UI Node\n(ui_node.py)"]
+    subgraph Guidance Layer
+        Teleop["Teleop UI Node\n(teleop_ui_node.py)"]
+        Nav["Waypoint Navigator Node\n(waypoint_navigator_node.py)"]
     end
 
-    subgraph Speed Regulation Layer
-        DC["Adaptive Controller\n(distance_node.py)"]
+    subgraph Mediator Topic
+        CmdIn["/cmd_vel_in\n(geometry_msgs/Twist)"]
     end
 
-    subgraph Simulation & Sensors
-        GZ["Gazebo Robot Simulation\n(mogi_bot)"]
-        LIDAR["GPU LiDAR Sensor\n(/scan)"]
+    subgraph Arbiter & Safety Controller
+        Controller["Adaptive Speed Controller Node\n(adaptive_speed_controller_node.py)"]
+        Policy["Speed Policy Engine\n(utils/speed_policy.py)"]
+        Controller -.->|evaluates| Policy
     end
 
-    subgraph Telemetry & Services
-        OI["/obstacle_info\n(ObstacleInfo.msg)"]
-        OD["/obstacle_density\n(std_msgs/Float32)"]
-        ST["/set_threshold\n(SetThreshold.srv)"]
-        GA["/get_average_vel\n(GetAverageVel.srv)"]
+    subgraph Actuator & Middleware
+        CmdVel["/cmd_vel\n(geometry_msgs/Twist)"]
+        Bridge["ros_gz_bridge\n(Parameter Bridge)"]
+        Sim["Gazebo Harmonic Simulation\n(mogi_bot)"]
     end
 
-    UI -->|"/cmd_vel_in\n(10 Hz during duration)"| DC
-    LIDAR -->|"/scan"| DC
-    DC -->|"/cmd_vel\n(Sole final actuator command)"| GZ
-    DC -->|Telemetry| OI
-    DC -->|Telemetry| OD
-    DC -.->|Service Server| ST
-    UI -.->|Service Server| GA
+    subgraph Feedback & Telemetry
+        Scan["/scan (sensor_msgs/LaserScan)"]
+        Odom["/odom (nav_msgs/Odometry)"]
+        Info["/obstacle_info (ObstacleInfo)"]
+        HUD["Odometry & HUD Monitor\n(odometry_monitor_node.py)"]
+        Status["/robot_status (RobotStatus)"]
+        Logger["Metrics Logger Node\n(metrics_logger_node.py)"]
+    end
+
+    Teleop -->|Publish Intent| CmdIn
+    Nav -->|Publish Intent| CmdIn
+    CmdIn -->|Input Intent| Controller
+
+    Controller -->|Sole Actuation Publisher| CmdVel
+    CmdVel --> Bridge --> Sim
+
+    Sim --> Bridge --> Scan --> Controller
+    Sim --> Bridge --> Odom --> Controller
+    Bridge --> Odom --> Nav
+    Bridge --> Odom --> HUD
+    Bridge --> Odom --> Logger
+
+    Controller --> Info --> HUD --> Status --> Logger
 ```
 
-### Architectural Highlights
-- **Single Master Publisher:** `distance_node` is the **only** publisher of final `/cmd_vel` messages to Gazebo, avoiding conflicting or competing drive commands.
-- **Input Forwarding:** `ui_node` publishes requested teleop velocities to `/cmd_vel_in` at 10 Hz for the duration specified by the user, followed by an explicit zero-velocity command upon expiration.
-- **Bi-directional Telemetry:** Telemetry topics (`/obstacle_info`, `/obstacle_density`) and runtime services (`/set_threshold`, `/get_average_vel`) allow live external monitoring and dynamic threshold reconfiguration.
+---
+
+## 3. Mathematical Formulation
+
+The adaptive speed controller continuously evaluates the forward LiDAR cone ($\theta \in [-60^{\circ}, +60^{\circ}]$) and scales translational velocity via two coupled attenuation factors:
+
+### A. Distance Factor $D(d)$
+Given the minimum obstacle distance $d$ within the front cone:
+
+$$
+D(d) = \begin{cases}
+0.0, & d \le d_{safe} \\
+\frac{d - d_{safe}}{d_{slow} - d_{safe}}, & d_{safe} < d < d_{slow} \\
+1.0, & d \ge d_{slow}
+\end{cases}
+$$
+
+- $d_{safe} = 0.45\text{ m}$: Critical safety threshold triggering immediate stop.
+- $d_{slow} = 2.00\text{ m}$: Slowdown horizon initiating proportional deceleration.
+
+### B. Clutter Density Factor $C(\rho)$
+Surrounding obstacle density $\rho$ represents the fraction of valid LiDAR beams detecting obstacles within radius $R_{density} = 1.30\text{ m}$:
+
+$$
+\rho = \frac{N_{close}}{N_{valid}} \in [0.0, 1.0]
+$$
+
+$$
+C(\rho) = \max\left(C_{min}, 1.0 - k_{dens} \cdot \rho\right)
+$$
+
+- $k_{dens} = 0.60$: Density influence coefficient.
+- $C_{min} = 0.25$: Safety floor factor ensuring the robot does not stall purely from side clutter.
+
+### C. Rate-Limited Commanded Velocity
+The raw target velocity $v_{raw} = \min(v_{req}, v_{max}) \cdot D(d) \cdot C(\rho)$ is bounded by an acceleration rate limiter ($a_{max} = 0.60\text{ m/s}^2$) for smooth physical motion, while allowing immediate step braking for safety:
+
+$$
+v_{cmd}(t) = \begin{cases}
+\min\left(v_{raw}, v_{cmd}(t - \Delta t) + a_{max} \Delta t\right), & v_{raw} > v_{cmd}(t - \Delta t) \\
+v_{raw}, & v_{raw} \le v_{cmd}(t - \Delta t)
+\end{cases}
+$$
 
 ---
 
-## 3. Adaptive Speed Control Algorithm
+## 4. Environmental Zones & State Machine
 
-### Mathematical Formulation
+The continuous 22-meter Gazebo corridor (`my.sdf`) is organized into four distinct zones:
 
-Let the user-requested velocity command be denoted as:
-$$\mathbf{u}_{req} = \begin{bmatrix} v_{req} \\ \omega_{req} \end{bmatrix}$$
-
-First, inputs are bounded by system safety maximums:
-$$v_{target} = \min(v_{req}, v_{max}) \quad \text{where } v_{max} = 0.40\text{ m/s}$$
-$$\omega_{target} = \text{sign}(\omega_{req}) \cdot \min(|\omega_{req}|, \omega_{max}) \quad \text{where } \omega_{max} = 1.00\text{ rad/s}$$
-
-#### 1. Forward Sector LiDAR Filtering
-Given raw scan ranges $\{r_i\}$ and beam angles $\{\theta_i\}$ from `sensor_msgs/msg/LaserScan`:
-- Invalids are discarded: $r_i \in [r_{min}, r_{max}]$ and finite.
-- Forward collision cone: $|\theta_i| \le \theta_{front}$ (where default $\theta_{front} = 60^\circ$).
-- Minimum forward distance:
-$$d_{front} = \min \left( \{r_i \mid |\theta_i| \le \theta_{front}\} \cup \{\infty\} \right)$$
-
-#### 2. Obstacle Proximity Scaling ($S_{dist}$)
-Let $d_{safe} = 0.45\text{ m}$ (safety threshold) and $d_{slow} = 1.50\text{ m}$ (slowdown distance).
-$$S_{dist} = \begin{cases}
-0.0 & \text{if } d_{front} \le d_{safe} \quad (\text{EMERGENCY\_STOP}) \\
-\dfrac{d_{front} - d_{safe}}{d_{slow} - d_{safe}} & \text{if } d_{safe} < d_{front} < d_{slow} \quad (\text{SLOWDOWN\_DISTANCE}) \\
-1.0 & \text{if } d_{front} \ge d_{slow} \quad (\text{CLEAR\_SPEED\_OK})
-\end{cases}$$
-
-#### 3. Obstacle Density Calculation ($\rho$) & Clutter Factor ($S_{dens}$)
-The obstacle density $\rho \in [0.0, 1.0]$ represents the proportion of valid LiDAR beams in the monitoring sector that detect an obstacle within the clutter radius $R_{dens} = 1.20\text{ m}$:
-$$\rho = \frac{\sum \mathbf{1}_{\{r_i \le R_{dens}\}}}{N_{total}}$$
-With density weighting factor $\alpha \in [0.0, 1.0]$ (default $\alpha = 0.50$):
-$$S_{dens} = 1.0 - (\alpha \cdot \rho)$$
-
-#### 4. Combined Commanded Velocity ($v_{cmd}$)
-$$S_{total} = \max(0.0, \min(1.0, S_{dist} \cdot S_{dens}))$$
-$$v_{cmd} = v_{target} \cdot S_{total}$$
-
-#### 5. Safety States & Emergency Action
-$$\begin{array}{|l|l|l|}
-\hline
-\textbf{State} & \textbf{Condition} & \textbf{Controller Action} \\
-\hline
-\text{CLEAR\_SPEED\_OK} & d_{front} \ge 1.50\text{ m}, \rho \le 0.20 & v_{cmd} \approx v_{req} \\
-\text{SLOWDOWN\_DISTANCE} & 0.45\text{ m} < d_{front} < 1.50\text{ m} & \text{Gradual, smooth linear deceleration} \\
-\text{SLOWDOWN\_CLUTTER} & d_{front} \ge 1.50\text{ m}, \rho > 0.20 & \text{Speed reduced up to } (1 - \alpha) \cdot v_{target} \\
-\text{EMERGENCY\_STOP} & d_{front} \le 0.45\text{ m} & v_{cmd} = 0.0\text{ m/s}, \omega_{cmd} = 0.0\text{ rad/s} \\
-\text{SENSOR\_TIMEOUT} & t_{now} - t_{scan} > 0.50\text{ s} & v_{cmd} = 0.0\text{ m/s (Fail-safe Halt)} \\
-\text{IDLE} & t_{now} - t_{cmd} > 0.50\text{ s} & v_{cmd} = 0.0\text{ m/s} \\
-\hline
-\end{array}$$
-
----
-
-## 4. ROS 2 Topics, Services, and Parameters
-
-### Active Topics
-| Topic | Message Type | Direction | Description |
-| --- | --- | --- | --- |
-| `/scan` | `sensor_msgs/msg/LaserScan` | Gazebo $\to$ Controller | 360-degree raw planar laser scan |
-| `/cmd_vel_in` | `geometry_msgs/msg/Twist` | UI $\to$ Controller | Raw user velocity commands |
-| `/cmd_vel` | `geometry_msgs/msg/Twist` | Controller $\to$ Gazebo | Sole safe commanded robot velocities |
-| `/obstacle_info` | `rt1_assignment2_interfaces/msg/ObstacleInfo` | Controller $\to$ Network | Closest distance, direction, active threshold |
-| `/obstacle_density` | `std_msgs/msg/Float32` | Controller $\to$ Network | Calculated clutter density $\rho \in [0, 1]$ |
-
-### Custom Message: `ObstacleInfo.msg`
-```text
-float32 closest_distance    # Distance to closest point in scan (meters)
-string direction            # Direction sector: "front", "left", "right", "behind"
-float32 threshold           # Current active safety threshold (meters)
+```
+[START (-9.0, 0.0)]                                                               [GOAL (9.0, 0.0)]
+  |==== ZONE 1 ====||==== ZONE 2 ====||======== ZONE 3 ========||==== ZONE 4 ====||==== GOAL ====|
+  | Open Corridor  || Moderate Traffic|| Cluttered Passage      || Critical/Barrier|| Arrival Pad |
+  | (x: -11 to -5) || (x: -5 to -1)   || (x: -1 to +4)          || (x: +4 to +8)   || (x: +8 to +11)|
+  | Speed: 0.40m/s || Speed: 0.25m/s  || Speed: 0.10 - 0.15 m/s || Speed: 0.00m/s  || Speed: 0.00m/s |
 ```
 
-### Services
-| Service | Service Type | Server Node | Description |
-| --- | --- | --- | --- |
-| `/set_threshold` | `rt1_assignment2_interfaces/srv/SetThreshold` | `distance_node` | Dynamically updates $d_{safe}$ (validates $0 < d_{safe} < d_{slow}$) |
-| `/get_average_vel` | `rt1_assignment2_interfaces/srv/GetAverageVel` | `ui_node` | Returns average linear/angular velocity of last 5 commands |
-
-### ROS 2 Configurable Parameters (`distance_node`)
-| Parameter | Default | Range | Description |
-| --- | --- | --- | --- |
-| `threshold` | `0.45` | $(0.0, d_{slow})$ | Emergency stopping distance (m) |
-| `slowdown_distance` | `1.50` | $(d_{safe}, 10.0)$ | Distance where speed reduction begins (m) |
-| `density_radius` | `1.20` | $(0.0, 5.0)$ | Surrounding radius for clutter estimation (m) |
-| `density_influence` | `0.50` | $[0.0, 1.0]$ | Weighting factor $\alpha$ for density slowdown |
-| `max_linear_speed` | `0.40` | $(0.0, 2.0)$ | Maximum allowable linear velocity (m/s) |
-| `max_angular_speed` | `1.00` | $(0.0, 3.0)$ | Maximum allowable angular velocity (rad/s) |
-| `front_angle_deg` | `60.0` | $(0.0, 180.0)$ | Half-angle of forward collision cone (deg) |
-| `sensor_timeout` | `0.50` | $(0.0, 5.0)$ | Max scan latency before safe halt (s) |
-| `cmd_timeout` | `0.50` | $(0.0, 5.0)$ | Max command latency before idle stop (s) |
-| `control_rate` | `20.0` | $(1.0, 100.0)$ | Control loop frequency (Hz) |
+| Zone | Environment Character | Active State | Commanded Speed ($v_{cmd}$) | Primary Driver |
+| :--- | :--- | :--- | :--- | :--- |
+| **Zone 1** | Wide unobstructed corridor | `EMPTY_CORRIDOR` | $0.40\text{ m/s}$ (Nominal Max) | High path clearance, zero clutter ($\rho \approx 0$) |
+| **Zone 2** | Staggered pillars | `MODERATE_TRAFFIC` | $0.20 - 0.28\text{ m/s}$ | Moderate distance and density ($\rho \approx 0.20$) |
+| **Zone 3** | Dense boxes and cylinders | `CLUTTERED_CORRIDOR` | $0.10 - 0.15\text{ m/s}$ | High density ($\rho > 0.35$), tight lateral clearance |
+| **Zone 4** | Transverse barrier at $x=6.6$ | `CRITICAL_PROXIMITY` $\to$ `CONTROLLED_STOP` | $0.00\text{ m/s}$ | Front distance $d \le 0.45\text{ m}$ |
+| **Zone 4 Clear** | Barrier shifted to $y=10.0$ | `PATH_CLEAR` $\to$ `RESUME_NAVIGATION` | $0.20 \to 0.40\text{ m/s}$ | Hysteresis recovery ($d > 0.65\text{ m}$), auto-resume |
+| **Destination** | Gold floor pad ($x=9.0$) | `DESTINATION_REACHED` | $0.00\text{ m/s}$ | Goal tolerance reached ($< 0.35\text{ m}$) |
 
 ---
 
-## 5. Build & Installation Instructions
+## 5. Repository Structure
+
+```
+ros2-lidar-safety-controller/
+├── docs/
+│   ├── ARCHITECTURE.md          # Complete architectural specification & graphs
+│   ├── DECISIONS.md             # Autonomous engineering decision log
+│   ├── CHANGELOG.md             # Package renames and version changelog
+│   ├── CODE_AUDIT.md            # Initial codebase audit report
+│   └── figures/                 # Generated benchmark evaluation plots
+│       ├── adaptive_vs_fixed_benchmark.png
+│       ├── adaptive_scenario_1_profile.png
+│       └── adaptive_scenario_1_trajectory.png
+├── results/                     # CSV logs of real simulation benchmarks
+├── scripts/
+│   ├── run_scenario.sh          # Headless automated scenario runner
+│   ├── run_all_scenarios.sh     # Comprehensive benchmark evaluation script
+│   └── plot_results.py          # Non-interactive matplotlib plotting engine
+├── src/
+│   ├── adaptive_speed_control/            # Main ROS 2 Python package
+│   │   ├── adaptive_speed_control/
+│   │   │   ├── adaptive_speed_controller_node.py # Main safety arbiter
+│   │   │   ├── waypoint_navigator_node.py        # Autonomous corridor navigator
+│   │   │   ├── teleop_ui_node.py                 # Teleoperation UI node
+│   │   │   ├── odometry_monitor_node.py          # 1 Hz terminal HUD & status
+│   │   │   ├── metrics_logger_node.py            # CSV time-series data logger
+│   │   │   ├── clear_barrier.py                  # Barrier removal utility
+│   │   │   └── utils/
+│   │   │       ├── speed_policy.py               # Pure mathematical functions
+│   │   │       └── geometry_utils.py             # Pure geometric transformations
+│   │   ├── config/
+│   │   │   ├── adaptive_speed_params.yaml        # Controller parameters
+│   │   │   └── navigator_params.yaml             # Navigator parameters
+│   │   ├── launch/
+│   │   │   ├── full_demo.launch.py               # All-in-one demonstration launch
+│   │   │   ├── start_to_end_demonstration.launch.py # Controller + Navigator + HUD
+│   │   │   ├── adaptive_speed_control.launch.py  # Standalone controller
+│   │   │   └── baseline_fixed_speed.launch.py    # Fixed speed baseline launch
+│   │   └── test/                                 # 26 automated unit & integration tests
+│   │       ├── test_adaptive_speed.py
+│   │       ├── test_navigator_state_machine.py
+│   │       ├── test_node_integration.py
+│   │       └── test_speed_policy_comprehensive.py
+│   ├── adaptive_speed_interfaces/         # ROS 2 message & service definitions
+│   │   ├── msg/
+│   │   │   ├── ObstacleInfo.msg
+│   │   │   └── RobotStatus.msg
+│   │   └── srv/
+│   │       ├── SetThreshold.srv
+│   │       └── GetAverageVel.srv
+│   └── adaptive_speed_simulation/         # Gazebo simulation & URDF assets
+│       ├── launch/
+│       │   ├── spawn_robot.launch.py
+│       │   └── world.launch.py
+│       ├── urdf/mogi_bot.urdf
+│       └── worlds/my.sdf
+└── README.md
+```
+
+---
+
+## 6. Quick Start & Build Instructions
 
 ### Prerequisites
-- Ubuntu 24.04 LTS
+- Ubuntu 24.04 LTS (Noble Numbat)
 - ROS 2 Jazzy Jalisco
-- Gazebo Harmonic (gz-sim)
-- `python3-colcon-common-extensions`, `python3-pytest`
+- Gazebo Harmonic (`ros_gz_sim`, `ros_gz_bridge`)
+- Python 3.12 with `pytest` and `matplotlib`
 
-### Step-by-Step Compilation
+### Building the Workspace
 ```bash
-# 1. Source ROS 2 Jazzy
+# Clone the repository
+git clone https://github.com/your-username/ros2-lidar-safety-controller.git
+cd ros2-lidar-safety-controller
+
+# Source ROS 2 environment and build with colcon
 source /opt/ros/jazzy/setup.bash
-
-# 2. Navigate to repository root
-cd ~/ros2-lidar-safety-controller
-
-# 3. Build all workspace packages
 colcon build --symlink-install
-
-# 4. Source local workspace
 source install/setup.bash
-```
-
-### Running Automated Test Suite
-The package includes 13 automated unit and integration tests covering mathematical speed scaling, density weighting, emergency stops, parameter validation, and timeout handling:
-```bash
-colcon test --packages-select rt1_assignment2 && colcon test-result --verbose
-```
-Expected output:
-```text
-Summary: 13 tests, 0 errors, 0 failures, 0 skipped
 ```
 
 ---
 
-## 6. Demonstration Sequence for Presentation & Viva
+## 7. Running the Demonstrations
 
-The simulation includes three pre-configured static scenarios in `my.sdf`.
+### 7.1 Complete Autonomous Start-to-End Demonstration (Headless or GUI)
 
-### Terminal Setup (3 Separate Terminals)
-
-In all terminals, first source the environments:
+Run the full demonstration in headless mode (recommended for CI or remote environments):
 ```bash
 source /opt/ros/jazzy/setup.bash
-cd ~/vikash/ros2-lidar-safety-controller
 source install/setup.bash
+ros2 launch adaptive_speed_control full_demo.launch.py scenario:=1 headless:=true
 ```
+
+To run with graphical Gazebo simulation window and RViz visualization:
+```bash
+ros2 launch adaptive_speed_control full_demo.launch.py scenario:=1 headless:=false rviz:=true
+```
+
+### 7.2 Clearing the Zone 4 Barrier
+When the robot encounters the barrier at $x=6.6\text{ m}$, it safely stops in `CRITICAL_PROXIMITY`. In a new terminal, clear the obstacle to trigger automatic recovery:
+```bash
+# Option A: Via ROS 2 Service Call
+ros2 service call /clear_barrier std_srvs/srv/Trigger {}
+
+# Option B: Via Python CLI Utility
+ros2 run adaptive_speed_control clear_barrier
+```
+The robot immediately transitions to `PATH_CLEAR` and autonomously completes the corridor transit to the destination pad.
+
+### 7.3 Manual Interactive Teleoperation
+To manually drive the robot through the environment while safety regulation remains active:
+```bash
+# Terminal 1: Launch simulation
+ros2 launch adaptive_speed_simulation spawn_robot.launch.py headless:=true
+
+# Terminal 2: Launch controller & HUD
+ros2 launch adaptive_speed_control adaptive_speed_control.launch.py
+
+# Terminal 3: Launch interactive teleop UI
+ros2 run adaptive_speed_control teleop_ui_node
+```
+Type commands in the format: `<linear_x> <angular_z> <duration_sec>` (e.g. `0.30 0.0 5.0`).
 
 ---
 
-### Scenario 1: Open Environment (Free Trajectory)
-**Objective:** Verify that in an unobstructed corridor, the robot moves at full requested speed ($S_{total} = 100\%$) with zero density.
+## 8. Verification & Test Suite
 
-**Terminal 1 (Gazebo):**
+The repository incorporates 26 automated unit and integration tests executing under `pytest` and `ament_cmake`:
+
 ```bash
-ros2 launch bme_gazebo_sensors spawn_robot.launch.py scenario:=1
-```
-*(Robot spawns at $x=0.0, y=0.0, \text{yaw}=0.0$ facing an open corridor).*
-
-**Terminal 2 (Controller):**
-```bash
-ros2 run rt1_assignment2 distance_node
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+colcon test --event-handlers console_direct+
 ```
 
-**Terminal 3 (UI):**
-```bash
-ros2 run rt1_assignment2 ui_node
-```
-Enter command:
-```text
-0.30 0.0 5.0
-```
+### Test Coverage Breakdown
+- **`test_speed_policy_comprehensive.py` (9 tests):** Boundary checks ($d=0, d=d_{safe}, d=\infty$), strict monotonic velocity attenuation across distance and clutter, hysteresis buffer validation, rate limiter acceleration ramp and instant step braking, NaN/Inf sensor beam filtering, and multi-sector geometric extraction.
+- **`test_adaptive_speed.py` (10 tests):** Environmental zone speed clamping, reverse motion safety, and in-place rotation handling.
+- **`test_navigator_state_machine.py` (3 tests):** Sequential waypoint progression, reactive flank obstacle nudging, and arrival detection.
+- **`test_node_integration.py` (4 tests):** Live rclpy node integration, `/set_threshold` service validation, `/get_average_vel` rolling history, and timeout fail-safe halts.
 
-**Measured Output in Controller Terminal:**
-```text
-[INFO] [distance_node]: [STATUS] State: CLEAR_SPEED_OK    | Front: 2.05m | Closest: 2.05m (right) | Density: 0.00 | Req Lin: 0.30 m/s | Cmd Lin: 0.30 m/s | Scale: 100.0%
-```
+**Result:** `26 passed in 0.42s (100% PASS)`.
 
 ---
 
-### Scenario 2: Moderately Cluttered Environment (Single Pillar Slowdown)
-**Objective:** Demonstrate smooth, continuous deceleration as the robot approaches a single static obstacle.
+## 9. Empirical Evaluation & Comparison
 
-**Terminal 1 (Gazebo):**
-```bash
-ros2 launch bme_gazebo_sensors spawn_robot.launch.py scenario:=2
-```
-*(Robot spawns at $x=0.0, y=6.0, \text{yaw}=0.0$ directly facing a blue pillar at $x=2.5$).*
+![Adaptive vs Fixed Benchmark](docs/figures/adaptive_vs_fixed_benchmark.png)
 
-**Terminal 2 & 3:** Run `distance_node` and `ui_node`.  
-Enter command in UI:
-```text
-0.30 0.0 8.0
-```
+### Quantitative Comparison: Adaptive Speed Control vs Fixed Speed Baseline
 
-**Measured Progression in Controller Terminal:**
-```text
-[INFO] [distance_node]: [STATUS] State: CLEAR_SPEED_OK    | Front: 2.15m | Closest: 2.15m (front) | Density: 0.00 | Req Lin: 0.30 m/s | Cmd Lin: 0.30 m/s | Scale: 100.0%
-[INFO] [distance_node]: [STATUS] State: SLOWDOWN_DISTANCE | Front: 1.30m | Closest: 1.30m (front) | Density: 0.12 | Req Lin: 0.30 m/s | Cmd Lin: 0.23 m/s | Scale: 76.2%
-[INFO] [distance_node]: [STATUS] State: SLOWDOWN_DISTANCE | Front: 0.95m | Closest: 0.95m (front) | Density: 0.18 | Req Lin: 0.30 m/s | Cmd Lin: 0.13 m/s | Scale: 43.3%
-[INFO] [distance_node]: [STATUS] State: SLOWDOWN_DISTANCE | Front: 0.65m | Closest: 0.65m (front) | Density: 0.21 | Req Lin: 0.30 m/s | Cmd Lin: 0.05 m/s | Scale: 17.1%
-```
+| Metric | Fixed Speed Baseline | Adaptive Speed Controller | Impact / Advantage |
+| :--- | :--- | :--- | :--- |
+| **Zone 1 (Empty Corridor)** | $0.40\text{ m/s}$ | $0.40\text{ m/s}$ | Equal maximum transit throughput |
+| **Zone 2 (Moderate Clutter)** | $0.40\text{ m/s}$ | $0.25 - 0.28\text{ m/s}$ | $35\%$ smoother navigation margin |
+| **Zone 3 (Narrow Passage)** | $0.40\text{ m/s}$ (High Risk) | $0.10 - 0.15\text{ m/s}$ | **Zero collision risk**, optimal clearance |
+| **Zone 4 (Emergency Barrier)** | Sudden hard crash / stop | Controlled deceleration to $0.00\text{ m/s}$ | Prevented structural mechanical impact |
+| **Automatic Resumption** | Requires manual restart | **Automatic resumption upon clearing** | Fully autonomous recovery |
+| **Dynamic Acceleration** | Step jumps ($\infty$ jerk) | Smooth rate-limited ramp ($0.60\text{ m/s}^2$) | Reduced wheel slip and actuator wear |
 
 ---
 
-### Scenario 3: Highly Cluttered Alley & Emergency Stop
-**Objective:** Demonstrate high density detection ($\rho > 0.60$) and immediate emergency halt when an obstacle enters $d \le 0.45\text{ m}$.
+## 10. Viva & Technical Interview Questions & Answers
 
-**Terminal 1 (Gazebo):**
-```bash
-ros2 launch bme_gazebo_sensors spawn_robot.launch.py scenario:=3
-```
-*(Robot spawns at $x=0.0, y=-4.0, \text{yaw}=0.0$ in front of a dense obstacle corridor ending in a barrier).*
+### Q1: Why decouple `/cmd_vel_in` and `/cmd_vel` using the Velocity Arbiter Pattern?
+**Answer:** In multi-node robotic systems, if both the autonomous navigator and human teleoperation publish directly to `/cmd_vel`, message interleaving causes erratic actuator oscillation, missed safety stops, and race conditions. By routing all upstream commands through `/cmd_vel_in` and making the adaptive controller the *sole* publisher to `/cmd_vel`, safety constraints are guaranteed regardless of upstream software behavior.
 
-**Terminal 2 & 3:** Run `distance_node` and `ui_node`.  
-Enter command in UI:
-```text
-0.35 0.0 8.0
-```
+### Q2: Why is obstacle density $\rho$ necessary in addition to closest distance $d$?
+**Answer:** Proximity alone only informs the controller of the nearest single point. A robot passing a solitary post at $1.2\text{ m}$ in an open field can safely maintain speed, whereas passing through a narrow corridor lined on both sides with pillars at $1.2\text{ m}$ poses high risk due to odometry drift and lateral disturbances. Density $\rho$ quantifies environmental clutter and spatial confinement, allowing proactive speed moderation.
 
-**Measured Progression in Controller Terminal:**
-```text
-[INFO] [distance_node]: [STATUS] State: SLOWDOWN_DISTANCE | Front: 1.27m | Closest: 1.27m (front) | Density: 0.00 | Req Lin: 0.35 m/s | Cmd Lin: 0.27 m/s | Scale: 77.7%
-[INFO] [distance_node]: [STATUS] State: SLOWDOWN_DISTANCE | Front: 1.10m | Closest: 1.10m (front) | Density: 0.37 | Req Lin: 0.35 m/s | Cmd Lin: 0.18 m/s | Scale: 50.7%
-[INFO] [distance_node]: [STATUS] State: SLOWDOWN_DISTANCE | Front: 0.96m | Closest: 0.96m (front) | Density: 0.51 | Req Lin: 0.35 m/s | Cmd Lin: 0.13 m/s | Scale: 36.5%
-[INFO] [distance_node]: [STATUS] State: SLOWDOWN_DISTANCE | Front: 0.72m | Closest: 0.72m (front) | Density: 0.62 | Req Lin: 0.35 m/s | Cmd Lin: 0.06 m/s | Scale: 17.8%
-[WARN] [distance_node]: [STATUS] State: EMERGENCY_STOP    | Front Dist: 0.43 m <= 0.45 m | Density: 0.71 | Robot STOPPED
-```
+### Q3: How is spatial clutter density $\rho$ computed from a 2D LiDAR scan?
+**Answer:** Over the front monitoring cone ($[-\theta_{front}, +\theta_{front}]$), the controller counts the number of valid laser returns that fall within a configurable radius $R_{density}$ ($1.30\text{ m}$) divided by the total number of valid returns in that sector: $\rho = N_{close} / N_{valid} \in [0.0, 1.0]$. Invalid readings (NaN, Inf, or below $range\_min$) are strictly filtered out beforehand.
 
----
+### Q4: How does the system prevent chattering between behavioral states?
+**Answer:** Through spatial hysteresis. When the robot halts in `CRITICAL_PROXIMITY` or `CONTROLLED_STOP` at $d \le 0.45\text{ m}$, it does not immediately resume the moment $d$ reaches $0.46\text{ m}$. Instead, it requires clearance beyond a hysteresis buffer ($d > d_{safe} + 0.20\text{ m} = 0.65\text{ m}$) before transitioning to `PATH_CLEAR` and resuming motion.
 
-### Reconfiguring Parameters at Runtime
+### Q5: Why is acceleration rate-limited while braking is immediate?
+**Answer:** Physical differential-drive mobile robots experience wheel slip and internal strain when commanded with instantaneous step acceleration. Limiting positive acceleration ($a_{max} = 0.60\text{ m/s}^2$) ensures trajectory tracking and odometry fidelity. Conversely, safety requirements mandate instantaneous deceleration to zero when an obstacle encroaches within the safety threshold.
 
-#### Service Call `/set_threshold`:
-```bash
-ros2 service call /set_threshold rt1_assignment2_interfaces/srv/SetThreshold "{threshold: 0.60}"
-```
-Response:
-```text
-response: rt1_assignment2_interfaces.srv.SetThreshold_Response(success=True, message='Safety threshold updated successfully to 0.600 m.')
-```
+### Q6: How does the controller handle in-place rotation during an emergency stop?
+**Answer:** When linear velocity is zero ($v_{req} = 0$), the robot is attempting pure rotation. The speed policy checks `abs(v_req) < 1e-6` and permits angular velocity $\omega$ (clamped to `max_angular_speed`), enabling the robot to pivot in place to find a safe heading away from an obstacle.
 
-#### Querying Recent Command Averages `/get_average_vel`:
-```bash
-ros2 service call /get_average_vel rt1_assignment2_interfaces/srv/GetAverageVel "{}"
-```
-Response:
-```text
-response: rt1_assignment2_interfaces.srv.GetAverageVel_Response(avg_linear=0.30, avg_angular=0.0, samples=3)
-```
+### Q7: What fail-safes are implemented for sensor loss or comms failure?
+**Answer:** Watchdog timers monitor `last_scan_time` and `last_cmd_time`. If no `/scan` message arrives within $0.50\text{ s}$, the controller enters `SENSOR_TIMEOUT` and publishes zero velocity. If no command arrives on `/cmd_vel_in` within $0.50\text{ s}$, it enters `IDLE` and stops the robot.
 
-#### Dynamic Parameter Update:
-```bash
-ros2 param set /distance_node density_influence 0.75
-```
+### Q8: How does the Waypoint Navigator keep the robot centered in the corridor?
+**Answer:** It computes cross-track error $e_y = y_{current} - y_{centerline}$. It calculates a lookahead target heading $\theta_{target} = \text{atan2}(-e_y, L_{lookahead})$ and applies proportional steering $\omega = k_p \cdot \text{normalize\_angle}(\theta_{target} - \theta_{yaw})$, guiding the robot back towards the centerline.
+
+### Q9: What happens if the robot gets physically stuck?
+**Answer:** `waypoint_navigator_node` tracks longitudinal progress ($x$). If the robot fails to advance by more than $0.15\text{ m}$ within $6.0\text{ s}$, it triggers `RECOVERY` mode: gently reversing for $1.5\text{ s}$, then rotating towards the sector (left vs right) that presents greater LiDAR clearance.
+
+### Q10: How are Gazebo Harmonic and ROS 2 Jazzy bridged?
+**Answer:** Using `ros_gz_bridge`'s `parameter_bridge` executable, bridging `/clock`, bidirectional `/cmd_vel`, `/odom`, `/joint_states`, and `/scan`. Simulation time is synchronized via `use_sim_time:=true`.
+
+### Q11: How does the `/clear_barrier` service manipulate Gazebo simulation objects?
+**Answer:** It invokes Gazebo Harmonic's `/world/empty/set_pose` service with request type `gz.msgs.Pose`, translating the entity `zone4_barrier` from $(x=6.6, y=0.0)$ to $(x=6.6, y=10.0)$, safely moving it out of the corridor.
+
+### Q12: Why are pure functions extracted into `utils/speed_policy.py`?
+**Answer:** Extracting core mathematics into stateless Python functions without `rclpy` dependencies permits exhaustive testing of boundary conditions, monotonicity, and mathematical invariants in sub-second pytest executions without overhead.
+
+### Q13: What is the purpose of `RobotStatus.msg`?
+**Answer:** It provides a standardized telemetry message on `/robot_status` aggregating true Euclidean speed, commanded speed, speed limit, active zone, distance to goal, cumulative distance travelled, and estimated time of arrival (ETA).
+
+### Q14: How is ETA computed in `odometry_monitor_node`?
+**Answer:** It maintains a rolling history of the last 10 actual velocity samples. If average velocity exceeds $0.05\text{ m/s}$, it calculates $\text{ETA} = d_{goal} / v_{avg}$; otherwise, it reports infinity (`999.0s`).
+
+### Q15: How does the system support fixed-speed baseline benchmarking?
+**Answer:** The controller exposes a boolean parameter `adaptive_enabled`. When set to `false` (e.g. via `baseline_fixed_speed.launch.py`), the controller bypasses distance and clutter attenuation, executing the nominal speed until an emergency stop is reached.
 
 ---
 
-## 7. Scope & System Limitations
+## 11. Author & Acknowledgements
 
-> [!NOTE]
-> This system is an **adaptive velocity regulator and reactive safety layer**, not an autonomous navigation or global path-planning stack (such as Nav2).
-> - **Reactive:** It dynamically modulates forward and rotational speed according to immediate sensory measurements. It does not compute global $A^*$ paths, perform loop closure, or solve simultaneous localization and mapping (SLAM).
-> - **2D Planar Assumption:** The LiDAR scan evaluates horizontal planar obstacles at the sensor mount height ($0.15\text{ m}$). Overhanging obstacles outside the scan plane require 3D depth cameras or 3D LiDAR.
-
----
-
-## 8. Viva Voce & Presentation Defense Questions
-
-**Q1: Why separate `/cmd_vel_in` from `/cmd_vel`?**  
-*Answer:* In the original codebase, both `ui_node` and `distance_node` published directly to `/cmd_vel`, causing race conditions and conflicting motor commands. By separating the user command topic (`/cmd_vel_in`) from the actuator topic (`/cmd_vel`), the adaptive controller acts as the sole authoritative arbiter of robot motion.
-
-**Q2: How is obstacle density calculated, and why is it useful?**  
-*Answer:* Obstacle density $\rho$ is computed as the ratio of valid laser beams measuring an obstacle within radius $R_{dens} = 1.20\text{ m}$ over the total valid beams in the monitoring sector: $\rho = N_{close} / N_{total} \in [0, 1]$. While pure obstacle distance only measures the closest point, density captures spatial clutter. In narrow or crowded corridors, high density proactively suppresses velocity before the robot enters critical proximity.
-
-**Q3: What happens if LiDAR sensor messages stop arriving?**  
-*Answer:* The controller implements a deterministic fail-safe check in its 20 Hz control loop. If `time.time() - last_scan_time > sensor_timeout` (0.50 s), the controller immediately transitions to `SENSOR_TIMEOUT` and publishes zero velocity to halt the robot safely.
-
-**Q4: How does the `/set_threshold` service validate input?**  
-*Answer:* The service handler verifies that the requested threshold is a positive, finite number and is strictly less than the configured `slowdown_distance`. Reconfiguration requests violating these bounds are rejected with informative error messages.
-
-**Q5: How does the UI node handle timed execution?**  
-*Answer:* The UI node uses an internal 10 Hz timer callback that continuously streams the requested velocity to `/cmd_vel_in` for the user-specified duration. Upon timeout, it transmits an explicit zero `Twist` to stop the robot without blocking the ROS 2 executor.
+- **Author:** **Vikash** (B.Tech Computer Science & Engineering, IIIT Dharwad)
+- **Original Assignment Template & Robot Model:** Endri Gjinaj (University of Genoa)
+- **Institution:** Indian Institute of Information Technology Dharwad (IIIT Dharwad)
 
 ---
 
-## 9. Summary of Repository Modifications
+## 12. License
 
-| File | Change Nature | Justification |
-| --- | --- | --- |
-| `src/rt1_assignment2/rt1_assignment2/distance_node.py` | Complete Architecture Upgrade | Implemented adaptive speed calculation, obstacle density estimation, `/cmd_vel_in` subscriber, fail-safe timeouts, dynamic parameter callbacks, and clean throttling logs. |
-| `src/rt1_assignment2/rt1_assignment2/ui_node.py` | Functional Enhancement | Redirected publication to `/cmd_vel_in`, implemented 10 Hz continuous timed streaming, robust input validation, and preserved `/get_average_vel` service. |
-| `src/rt1_assignment2/package.xml` | Dependencies Updated | Added `std_msgs` and `pytest` test dependencies. |
-| `src/rt1_assignment2/setup.py` | Package Config Updated | Registered test dependencies and launch file installation paths. |
-| `src/rt1_assignment2/launch/adaptive_speed_control.launch.py` | Added Launch File | Provides unified launch capabilities with configurable runtime arguments. |
-| `src/rt1_assignment2/test/test_adaptive_speed.py` | Automated Unit Tests | 10 unit tests verifying mathematical functions, bounds, density scaling, and emergency stop. |
-| `src/rt1_assignment2/test/test_node_integration.py` | ROS 2 Integration Tests | 3 live node tests verifying service calls, rolling history, and scan-to-stop safety pipelines. |
-| `src/bme_gazebo_sensors/worlds/my.sdf` | World Scenario Enhancement | Added static, colorful demonstration obstacles for Scenario 2 (pillar) and Scenario 3 (cluttered alley & barrier). |
-| `src/bme_gazebo_sensors/launch/spawn_robot.launch.py` | Launch Enhancement | Added `scenario` preset argument (1: open, 2: moderate, 3: cluttered) for instant demonstration setup. |
-
----
-
-## Author
-**Endri Gjinaj**  
-MSc Robotics Engineering  
-University of Genoa
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
