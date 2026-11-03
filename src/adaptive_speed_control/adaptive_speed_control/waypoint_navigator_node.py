@@ -19,12 +19,12 @@ from adaptive_speed_control.utils.geometry_utils import (
 class WaypointNavigatorNode(Node):
     """
     Autonomous Corridor Waypoint Navigator.
-    - Implements robust state machine: IDLE, ROTATE_TO_GOAL, DRIVE, AVOID_OBSTACLE, RECOVERY, GOAL_REACHED, FAILED.
+    - Full State Machine: IDLE, ROTATE_TO_GOAL, DRIVE, AVOID_OBSTACLE, RECOVERY, GOAL_REACHED, FAILED.
+    - Tracks sequential corridor waypoints from START to GOAL.
     - Subscribes to /odom for pose tracking and /obstacle_info for reactive obstacle avoidance.
-    - Tracks centerline y = 0.0 towards goal (goal_x, goal_y).
-    - Publishes target velocity commands to /cmd_vel_in.
+    - Publishes desired velocities to /cmd_vel_in.
     - Stuck detection and automatic recovery behaviors.
-    - Provides /start_navigation, /stop_navigation, and /reset_navigation services.
+    - Services: /start_navigation, /stop_navigation, /reset_navigation.
     """
 
     def __init__(self):
@@ -37,6 +37,7 @@ class WaypointNavigatorNode(Node):
         self.declare_parameter('goal_y', 0.0)
         self.declare_parameter('nominal_speed', 0.40)
         self.declare_parameter('goal_tolerance', 0.35)
+        self.declare_parameter('waypoint_tolerance', 0.60)
         self.declare_parameter('heading_gain', 1.80)
         self.declare_parameter('lookahead_dist', 1.50)
         self.declare_parameter('auto_start', True)
@@ -45,11 +46,20 @@ class WaypointNavigatorNode(Node):
 
         self._load_parameters()
 
+        # Sequential corridor waypoints
+        self.waypoints = [
+            (-5.0, 0.0),  # End Zone 1
+            (-1.0, 0.0),  # End Zone 2
+            (4.0, 0.0),   # End Zone 3
+            (self.goal_x, self.goal_y)  # Zone 4 Destination
+        ]
+        self.current_wp_idx = 0
+
         # Subscribers
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.on_odom, 10)
         self.obstacle_sub = self.create_subscription(ObstacleInfo, '/obstacle_info', self.on_obstacle_info, 10)
 
-        # Publisher to /cmd_vel_in (Upstream input to Adaptive Controller)
+        # Publisher to /cmd_vel_in
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_in', 10)
 
         # Services
@@ -74,8 +84,7 @@ class WaypointNavigatorNode(Node):
         self.last_progress_x = self.start_x
         self.last_progress_time = time.time()
         self.recovery_start_time = 0.0
-        self.recovery_duration = 2.0
-        self.recovery_phase = 0  # 0: backup, 1: turn
+        self.recovery_phase = 0
 
         # Mission Timing & Metrics
         self.mission_start_time = time.time()
@@ -88,9 +97,10 @@ class WaypointNavigatorNode(Node):
         self.get_logger().info(
             f"\n"
             f"===============================================================\n"
-            f"   Start-to-End Corridor Waypoint Navigator Ready\n"
+            f"   Start-to-End Corridor Waypoint Navigator Initialized\n"
             f"===============================================================\n"
             f"  Route               : ({self.start_x:.1f}, {self.start_y:.1f}) -> ({self.goal_x:.1f}, {self.goal_y:.1f})\n"
+            f"  Waypoints Count     : {len(self.waypoints)}\n"
             f"  Nominal Speed       : {self.nominal_speed:.2f} m/s\n"
             f"  Publishing Target   : /cmd_vel_in\n"
             f"  Feedback Source     : /odom, /obstacle_info\n"
@@ -105,6 +115,7 @@ class WaypointNavigatorNode(Node):
         self.goal_y = float(self.get_parameter('goal_y').value)
         self.nominal_speed = float(self.get_parameter('nominal_speed').value)
         self.goal_tolerance = float(self.get_parameter('goal_tolerance').value)
+        self.waypoint_tolerance = float(self.get_parameter('waypoint_tolerance').value)
         self.heading_gain = float(self.get_parameter('heading_gain').value)
         self.lookahead_dist = float(self.get_parameter('lookahead_dist').value)
         self.auto_start = bool(self.get_parameter('auto_start').value)
@@ -136,6 +147,7 @@ class WaypointNavigatorNode(Node):
     def handle_reset_nav(self, request, response):
         self.nav_state = 'DRIVE' if self.auto_start else 'IDLE'
         self.destination_reached = False
+        self.current_wp_idx = 0
         self.last_progress_x = self.current_x
         self.last_progress_time = time.time()
         self.mission_start_time = time.time()
@@ -162,7 +174,7 @@ class WaypointNavigatorNode(Node):
 
         now = time.time()
 
-        # Check goal reached
+        # Check final destination reached
         dist_to_goal = euclidean_distance(self.current_x, self.current_y, self.goal_x, self.goal_y)
         if (self.current_x >= (self.goal_x - self.goal_tolerance)) or dist_to_goal <= self.goal_tolerance:
             if not self.destination_reached:
@@ -179,6 +191,13 @@ class WaypointNavigatorNode(Node):
                     f"============================================================="
                 )
             return
+
+        # Advance intermediate waypoint if reached
+        if self.current_wp_idx < len(self.waypoints) - 1:
+            wp_x, wp_y = self.waypoints[self.current_wp_idx]
+            if euclidean_distance(self.current_x, self.current_y, wp_x, wp_y) <= self.waypoint_tolerance or self.current_x >= wp_x:
+                self.current_wp_idx += 1
+                self.get_logger().info(f"[NAV] Advanced to waypoint {self.current_wp_idx}: {self.waypoints[self.current_wp_idx]}")
 
         # Check global navigation timeout
         if (now - self.mission_start_time) > self.navigation_timeout:
