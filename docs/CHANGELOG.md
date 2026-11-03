@@ -76,7 +76,11 @@ All notable changes to the **Adaptive Speed Control in Cluttered Environments** 
 - `launch/full_demo.launch.py`: Complete system launcher (Gazebo Harmonic, bridge, robot spawn, controller, navigator, HUD, and optional metrics logger).
 # Unreleased — robustness integration
 
+## QA follow-up
+
+- Switched headless sensor configuration to CPU lidar and passed `use_sim_time` to control nodes.
+- Documented the ROS/Gazebo LaserScan conversion blocker, observed test results, and verified run guide.
+
 - Wired fault injection, collision monitoring, and twist mux into autonomous and manual launch paths.
 - Routed keyboard/Gazebo key commands to `/cmd_vel_teleop` and waypoint navigation to `/cmd_vel_nav`.
 - Added entry points, bag ignore rule, replay and offline CSV analysis utilities.
-

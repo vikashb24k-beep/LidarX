@@ -94,8 +94,11 @@ This log records autonomous engineering decisions, rationales, and architectural
 - **Impact:** Operators have instant visual awareness of speed, safety margin, and active zone in RViz, GUI, and console.
 # Add-on robustness integration
 
+## 2026-11-03 QA: LiDAR bridge blockage
+
+Headless Gazebo publishes valid native `gz.msgs.LaserScan` messages on `/scan_raw`; the model now uses CPU lidar. The ROS bridge advertises `sensor_msgs/msg/LaserScan`, but rclpy fails on the injector's first received sample with `RuntimeError: Unable to convert call argument '0' to Python object`. Three bounded attempts were made: reliable ingress QoS, CPU lidar, and consistent simulation time. The last two are retained because they are correct independent fixes; the type-support issue remains a known environment defect. The controller must remain fail-safe in `SENSOR_TIMEOUT`; no bypass or synthetic replacement is permitted.
+
 - Gazebo publishes LiDAR as `/scan_raw`; `scan_fault_injector_node` is the sole bridge to `/scan`, retaining the incoming header stamp and frame so latency is detected from simulated time.
 - `twist_mux` is intentionally before the adaptive controller: teleop and navigation can be arbitrated, but neither can bypass the final `/cmd_vel` safety publisher.
 - Physical contact monitoring uses the Gazebo `Contacts` bridge with a footprint-clearance fallback. A positive-control collision run remains required before quoting zero-collision results.
 - The controller currently self-configures/self-activates for compatibility with existing launch files. The separately installed lifecycle manager is not launched because the waypoint navigator has not yet been converted to a lifecycle node; this is a known incomplete Phase C item.
-
