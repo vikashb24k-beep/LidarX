@@ -84,7 +84,8 @@ def generate_launch_description():
         # Adaptive Speed Controller (Sole publisher to /cmd_vel)
         actions.append(Node(
             package='twist_mux', executable='twist_mux', name='twist_mux', output='screen',
-            parameters=[os.path.join(pkg_control, 'config', 'twist_mux.yaml')]
+            parameters=[os.path.join(pkg_control, 'config', 'twist_mux.yaml')],
+            remappings=[('/cmd_vel_out', '/cmd_vel_in')]
         ))
         actions.append(Node(
             package='adaptive_speed_control', executable='scan_fault_injector_node',

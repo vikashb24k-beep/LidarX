@@ -60,7 +60,8 @@ def generate_launch_description():
     # has higher priority than navigation; /cmd_vel_in is twist_mux output.
     mux_node = Node(
         package='twist_mux', executable='twist_mux', name='twist_mux', output='screen',
-        parameters=[os.path.join(pkg_share, 'config', 'twist_mux.yaml')]
+        parameters=[os.path.join(pkg_share, 'config', 'twist_mux.yaml')],
+        remappings=[('/cmd_vel_out', '/cmd_vel_in')]
     )
 
     fault_injector_node = Node(

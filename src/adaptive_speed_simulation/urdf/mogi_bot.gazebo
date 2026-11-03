@@ -56,8 +56,7 @@
   </gazebo>
 
  <gazebo reference="scan_link">
-    <!-- CPU lidar is reliable in headless Gazebo Harmonic CI environments. -->
-    <sensor name="lidar" type="lidar">
+    <sensor name="gpu_lidar" type="gpu_lidar">
       <update_rate>10</update_rate>
       <topic>scan_raw</topic>
       <gz_frame_id>scan_link</gz_frame_id>
