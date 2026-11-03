@@ -161,3 +161,4 @@ v_{cmd}(t) = \begin{cases}
 v_{raw}, & \text{if } v_{raw} \le v_{cmd}(t - \Delta t) \text{ (instant braking)}
 \end{cases}
 $$
+

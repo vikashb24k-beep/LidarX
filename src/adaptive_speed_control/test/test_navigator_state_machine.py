@@ -107,3 +107,4 @@ def test_navigator_goal_arrival(ros_context):
     assert published[-1].linear.x == 0.0
 
     nav.destroy_node()
+

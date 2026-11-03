@@ -219,3 +219,4 @@ def rate_limit_velocity(v_target: float, v_current: float, max_accel: float, dt:
     else:
         # Instant deceleration allowed for rapid safety halting
         return v_target
+

@@ -11,3 +11,4 @@
     auto_start: true
     stuck_timeout: 5.0
     navigation_timeout: 120.0
+

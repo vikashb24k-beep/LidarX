@@ -49,3 +49,4 @@ if [ -f "${CSV_FILE}" ]; then
 else
     echo ">> [WARNING] CSV file was not generated."
 fi
+

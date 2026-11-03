@@ -24,3 +24,4 @@ def cross_track_error(px: float, py: float, line_y: float = 0.0) -> float:
     Positive indicates the robot is left of the centerline (py > line_y).
     """
     return py - line_y
+

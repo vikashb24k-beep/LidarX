@@ -52,3 +52,4 @@ This log records autonomous engineering decisions, rationales, and architectural
 - **Decision:** Execute Gazebo simulation headless (`gz sim -s -r --headless-rendering`) for all automated test runs, benchmarks, and verification steps. Enforce strict cleanup via process killing (`killall -9 gz-sim-server ruby gz` and `pkill -f ros2`) with explicit execution timeouts.
 - **Rationale:** Prevents headless GUI hangs, X11 crashes, and orphaned simulation background tasks consuming system resources.
 - **Impact:** High reliability across continuous integration and automated demonstration runs.
+

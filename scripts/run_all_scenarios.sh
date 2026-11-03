@@ -26,3 +26,4 @@ python3 "${SCRIPT_DIR}/plot_results.py" "${WS_DIR}/results" "${WS_DIR}/docs/figu
 echo "================================================================"
 echo " All scenarios completed. Figures saved to docs/figures/"
 echo "================================================================"
+
