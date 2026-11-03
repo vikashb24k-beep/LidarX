@@ -1,0 +1,454 @@
+<sdf version='1.10'>
+  <world name='empty'>
+    <physics name='1ms' type='ignored'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <plugin name='gz::sim::systems::Physics' filename='gz-sim-physics-system'/>
+    <plugin name='gz::sim::systems::UserCommands' filename='gz-sim-user-commands-system'/>
+    <plugin name='gz::sim::systems::SceneBroadcaster' filename='gz-sim-scene-broadcaster-system'/>
+    <plugin name='gz::sim::systems::Contact' filename='gz-sim-contact-system'/>
+    <plugin name='gz::sim::systems::Sensors' filename='gz-sim-sensors-system'>
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>5.56e-06 2.28e-05 -4.23e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <scene>
+      <ambient>0.5 0.5 0.5 1</ambient>
+      <background>0.7 0.75 0.8 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <!-- Ground Plane -->
+    <model name='ground_plane'>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>50</mu>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.85 0.85 0.85 1</ambient>
+            <diffuse>0.85 0.85 0.85 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+          </material>
+        </visual>
+      </link>
+      <pose>0 0 0 0 0 0</pose>
+    </model>
+
+    <!-- Directional Sun Light -->
+    <light name='sun' type='directional'>
+      <pose>0 0 15 0 0 0</pose>
+      <cast_shadows>true</cast_shadows>
+      <intensity>1.2</intensity>
+      <direction>-0.3 0.2 -0.9</direction>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.3 0.3 0.3 1</specular>
+    </light>
+
+    <!-- ================================================================= -->
+    <!-- CONTINUOUS CORRIDOR WALLS                                         -->
+    <!-- Length: 22m (-11m to +11m), Width: 3.6m (y: -1.8m to +1.8m)       -->
+    <!-- ================================================================= -->
+    <model name='wall_north'>
+      <pose>0.0 1.8 0.6 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>22.0 0.15 1.2</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>22.0 0.15 1.2</size></box></geometry>
+          <material>
+            <ambient>0.5 0.55 0.6 1</ambient>
+            <diffuse>0.55 0.6 0.65 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='wall_south'>
+      <pose>0.0 -1.8 0.6 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>22.0 0.15 1.2</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>22.0 0.15 1.2</size></box></geometry>
+          <material>
+            <ambient>0.5 0.55 0.6 1</ambient>
+            <diffuse>0.55 0.6 0.65 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='wall_west_cap'>
+      <pose>-11.0 0.0 0.6 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.15 3.75 1.2</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.15 3.75 1.2</size></box></geometry>
+          <material>
+            <ambient>0.5 0.55 0.6 1</ambient>
+            <diffuse>0.55 0.6 0.65 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='wall_east_cap'>
+      <pose>11.0 0.0 0.6 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.15 3.75 1.2</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.15 3.75 1.2</size></box></geometry>
+          <material>
+            <ambient>0.5 0.55 0.6 1</ambient>
+            <diffuse>0.55 0.6 0.65 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================================================================= -->
+    <!-- VISUAL FLOOR PADS & ZONE MARKERS                                  -->
+    <!-- ================================================================= -->
+    <!-- START Plate (Bright Green) at x = -9.0, y = 0.0 -->
+    <model name='floor_start_marker'>
+      <pose>-9.0 0.0 0.005 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><box><size>1.2 1.4 0.01</size></box></geometry>
+          <material>
+            <ambient>0.0 0.7 0.2 1</ambient>
+            <diffuse>0.1 0.85 0.3 1</diffuse>
+            <specular>0.6 0.6 0.6 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Zone 1: Empty Corridor Floor Indicator (Soft Emerald Green) -->
+    <model name='floor_zone1'>
+      <pose>-6.5 0.0 0.003 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><box><size>3.8 2.8 0.005</size></box></geometry>
+          <material>
+            <ambient>0.15 0.5 0.25 0.8</ambient>
+            <diffuse>0.2 0.6 0.3 0.8</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Zone 2: Moderate Traffic Floor Indicator (Soft Blue) -->
+    <model name='floor_zone2'>
+      <pose>-1.75 0.0 0.003 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><box><size>5.0 2.8 0.005</size></box></geometry>
+          <material>
+            <ambient>0.15 0.35 0.65 0.8</ambient>
+            <diffuse>0.2 0.45 0.75 0.8</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Zone 3: Cluttered Corridor Floor Indicator (Amber Orange) -->
+    <model name='floor_zone3'>
+      <pose>3.0 0.0 0.003 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><box><size>4.5 2.8 0.005</size></box></geometry>
+          <material>
+            <ambient>0.7 0.4 0.05 0.8</ambient>
+            <diffuse>0.8 0.5 0.1 0.8</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Zone 4: Critical Proximity Floor Indicator (Crimson Red) -->
+    <model name='floor_zone4'>
+      <pose>6.0 0.0 0.003 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><box><size>1.6 2.8 0.005</size></box></geometry>
+          <material>
+            <ambient>0.75 0.1 0.1 0.8</ambient>
+            <diffuse>0.85 0.15 0.15 0.8</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- DESTINATION Plate (Bright Gold) at x = 9.0, y = 0.0 -->
+    <model name='floor_goal_marker'>
+      <pose>9.0 0.0 0.005 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry><box><size>1.2 1.4 0.01</size></box></geometry>
+          <material>
+            <ambient>0.8 0.65 0.0 1</ambient>
+            <diffuse>0.95 0.8 0.0 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================================================================= -->
+    <!-- ZONE 2: MODERATE TRAFFIC OBSTACLES (Staggered Side Pillars)       -->
+    <!-- ================================================================= -->
+    <model name='zone2_pillar_1'>
+      <pose>-3.2 0.95 0.5 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><cylinder><radius>0.22</radius><length>1.0</length></cylinder></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><cylinder><radius>0.22</radius><length>1.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.1 0.3 0.7 1</ambient>
+            <diffuse>0.2 0.5 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='zone2_pillar_2'>
+      <pose>-1.8 -0.95 0.5 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><cylinder><radius>0.22</radius><length>1.0</length></cylinder></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><cylinder><radius>0.22</radius><length>1.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.1 0.3 0.7 1</ambient>
+            <diffuse>0.2 0.5 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='zone2_pillar_3'>
+      <pose>-0.4 0.90 0.5 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><cylinder><radius>0.20</radius><length>1.0</length></cylinder></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><cylinder><radius>0.20</radius><length>1.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.1 0.3 0.7 1</ambient>
+            <diffuse>0.2 0.5 0.9 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================================================================= -->
+    <!-- ZONE 3: CLUTTERED CORRIDOR (Multiple Bilateral Obstacles)         -->
+    <!-- Central corridor clearance is 1.04m, safely enclosing 0.4m robot  -->
+    <!-- ================================================================= -->
+    <model name='clutter_box_L1'>
+      <pose>1.0 0.75 0.4 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.35 0.35 0.8</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.35 0.35 0.8</size></box></geometry>
+          <material>
+            <ambient>0.8 0.4 0.05 1</ambient>
+            <diffuse>0.9 0.5 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='clutter_box_R1'>
+      <pose>1.0 -0.75 0.4 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.35 0.35 0.8</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.35 0.35 0.8</size></box></geometry>
+          <material>
+            <ambient>0.8 0.4 0.05 1</ambient>
+            <diffuse>0.9 0.5 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='clutter_cyl_L2'>
+      <pose>2.1 0.70 0.4 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><cylinder><radius>0.18</radius><length>0.8</length></cylinder></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><cylinder><radius>0.18</radius><length>0.8</length></cylinder></geometry>
+          <material>
+            <ambient>0.8 0.35 0.05 1</ambient>
+            <diffuse>0.95 0.45 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='clutter_cyl_R2'>
+      <pose>2.1 -0.70 0.4 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><cylinder><radius>0.18</radius><length>0.8</length></cylinder></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><cylinder><radius>0.18</radius><length>0.8</length></cylinder></geometry>
+          <material>
+            <ambient>0.8 0.35 0.05 1</ambient>
+            <diffuse>0.95 0.45 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='clutter_box_L3'>
+      <pose>3.2 0.75 0.4 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.35 0.35 0.8</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.35 0.35 0.8</size></box></geometry>
+          <material>
+            <ambient>0.8 0.4 0.05 1</ambient>
+            <diffuse>0.9 0.5 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='clutter_box_R3'>
+      <pose>3.2 -0.75 0.4 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><box><size>0.35 0.35 0.8</size></box></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><box><size>0.35 0.35 0.8</size></box></geometry>
+          <material>
+            <ambient>0.8 0.4 0.05 1</ambient>
+            <diffuse>0.9 0.5 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='clutter_cyl_L4'>
+      <pose>4.3 0.70 0.4 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><cylinder><radius>0.18</radius><length>0.8</length></cylinder></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><cylinder><radius>0.18</radius><length>0.8</length></cylinder></geometry>
+          <material>
+            <ambient>0.8 0.35 0.05 1</ambient>
+            <diffuse>0.95 0.45 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='clutter_cyl_R4'>
+      <pose>4.3 -0.70 0.4 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><cylinder><radius>0.18</radius><length>0.8</length></cylinder></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><cylinder><radius>0.18</radius><length>0.8</length></cylinder></geometry>
+          <material>
+            <ambient>0.8 0.35 0.05 1</ambient>
+            <diffuse>0.95 0.45 0.1 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================================================================= -->
+    <!-- ZONE 4: CRITICAL PROXIMITY BARRIER (Direct Path Obstacle)         -->
+    <!-- Positioned at x = 6.6, y = 0.0; blocks path until cleared         -->
+    <!-- ================================================================= -->
+    <model name='zone4_barrier'>
+      <pose>6.6 0.0 0.5 0 0 0</pose>
+      <static>true</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry><cylinder><radius>0.30</radius><length>1.0</length></cylinder></geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry><cylinder><radius>0.30</radius><length>1.0</length></cylinder></geometry>
+          <material>
+            <ambient>0.9 0.05 0.05 1</ambient>
+            <diffuse>1.0 0.1 0.1 1</diffuse>
+            <specular>0.8 0.8 0.8 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

@@ -1,0 +1,15 @@
+/**:
+  ros__parameters:
+    threshold: 0.45
+    slowdown_distance: 2.00
+    density_radius: 1.30
+    density_influence: 0.60
+    c_min: 0.25
+    max_linear_speed: 0.40
+    max_angular_speed: 1.00
+    max_acceleration: 0.60
+    front_angle_deg: 60.0
+    sensor_timeout: 0.50
+    cmd_timeout: 0.50
+    control_rate: 20.0
+    adaptive_enabled: true

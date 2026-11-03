@@ -1,0 +1,8 @@
+float32 closest_distance
+string direction
+float32 threshold
+float32 front_distance
+float32 left_distance
+float32 right_distance
+float32 density_rho
+string zone
