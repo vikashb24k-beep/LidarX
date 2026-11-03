@@ -40,7 +40,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             LaunchConfiguration('controller_params'),
-            {'adaptive_enabled': LaunchConfiguration('adaptive_enabled')}
+            {'adaptive_enabled': LaunchConfiguration('adaptive_enabled'), 'use_sim_time': True}
         ]
     )
 
@@ -52,7 +52,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             LaunchConfiguration('navigator_params'),
-            {'auto_start': LaunchConfiguration('auto_start')}
+            {'auto_start': LaunchConfiguration('auto_start'), 'use_sim_time': True}
         ]
     )
 
@@ -66,12 +66,12 @@ def generate_launch_description():
     fault_injector_node = Node(
         package='adaptive_speed_control', executable='scan_fault_injector_node',
         name='scan_fault_injector_node', output='screen',
-        parameters=[{'fault_profile': LaunchConfiguration('fault_profile')}]
+        parameters=[{'fault_profile': LaunchConfiguration('fault_profile'), 'use_sim_time': True}]
     )
 
     collision_monitor_node = Node(
         package='adaptive_speed_control', executable='collision_monitor_node',
-        name='collision_monitor_node', output='screen'
+        name='collision_monitor_node', output='screen', parameters=[{'use_sim_time': True}]
     )
 
     # 3. Odometry & HUD monitor publishing to /robot_status and RViz markers
@@ -79,7 +79,7 @@ def generate_launch_description():
         package='adaptive_speed_control',
         executable='odometry_monitor_node',
         name='odometry_monitor_node',
-        output='screen'
+        output='screen', parameters=[{'use_sim_time': True}]
     )
 
     return LaunchDescription([

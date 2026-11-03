@@ -89,7 +89,7 @@ def generate_launch_description():
         actions.append(Node(
             package='adaptive_speed_control', executable='scan_fault_injector_node',
             name='scan_fault_injector_node', output='screen',
-            parameters=[{'fault_profile': LaunchConfiguration('fault_profile')}]
+            parameters=[{'fault_profile': LaunchConfiguration('fault_profile'), 'use_sim_time': True}]
         ))
         actions.append(Node(
             package='adaptive_speed_control',
@@ -105,11 +105,12 @@ def generate_launch_description():
                 'max_linear_speed': 0.40,
                 'max_acceleration': 0.60,
                 'enable_corridor_stop': False,
+                'use_sim_time': True,
             }]
         ))
         actions.append(Node(
             package='adaptive_speed_control', executable='collision_monitor_node',
-            name='collision_monitor_node', output='screen'
+            name='collision_monitor_node', output='screen', parameters=[{'use_sim_time': True}]
         ))
 
         # Odometry Monitor (HUD & RViz markers)
@@ -123,6 +124,7 @@ def generate_launch_description():
                 'goal_y': goal_y,
                 'speed_limit': 0.40,
                 'log_rate': 1.5,
+                'use_sim_time': True,
             }]
         ))
 
