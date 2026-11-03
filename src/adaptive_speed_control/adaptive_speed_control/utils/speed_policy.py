@@ -310,3 +310,212 @@ def compute_limit_reason(
     return "CLEAR"
 
 
+def compute_dynamic_safety_margin(
+    v: float,
+    d_base: float = 0.45,
+    t_reaction: float = 0.10,
+    t_scan_latency: float = 0.0,
+    a_brake: float = 0.60,
+) -> float:
+    """
+    Speed-dependent safety margin based on vehicle physics:
+      d_margin(v) = d_base + v * (t_reaction + t_scan_latency) + v^2 / (2 * a_brake)
+    """
+    v_fwd = max(0.0, v)
+    a_safe = max(0.1, a_brake)
+    braking_distance = (v_fwd ** 2) / (2.0 * a_safe)
+    reaction_distance = v_fwd * (t_reaction + max(0.0, t_scan_latency))
+    return float(d_base + reaction_distance + braking_distance)
+
+
+def process_footprint_corridor(
+    ranges: list,
+    angle_min: float,
+    angle_increment: float,
+    range_min: float = 0.05,
+    range_max: float = 30.0,
+    footprint_cfg: Dict[str, Any] = None,
+    v_cmd: float = 0.0,
+    omega_cmd: float = 0.0,
+    lookahead: float = 3.50,
+) -> Dict[str, Any]:
+    """
+    Converts valid LiDAR scan points into the robot chassis frame (using sensor offsets)
+    and checks obstacle clearance within the dynamic swept corridor.
+    """
+    if footprint_cfg is None:
+        footprint_cfg = {
+            'half_width': 0.175,
+            'front_offset': 0.20,
+            'rear_offset': -0.20,
+            'sensor_offset_x': 0.15,
+            'sensor_offset_y': 0.0,
+            'circumscribed_radius': 0.266,
+            'lateral_margin': 0.08,
+        }
+
+    half_w = footprint_cfg.get('half_width', 0.175)
+    lat_margin = footprint_cfg.get('lateral_margin', 0.08)
+    front_offset = footprint_cfg.get('front_offset', 0.20)
+    rear_offset = footprint_cfg.get('rear_offset', -0.20)
+    sx = footprint_cfg.get('sensor_offset_x', 0.15)
+    sy = footprint_cfg.get('sensor_offset_y', 0.0)
+    r_circ = footprint_cfg.get('circumscribed_radius', 0.266)
+
+    corridor_half_w = half_w + lat_margin
+
+    min_fwd_clearance = float('inf')
+    min_rev_clearance = float('inf')
+    min_rot_clearance = float('inf')
+    closest_dist = float('inf')
+    closest_x = 0.0
+    closest_y = 0.0
+
+    n_valid_fwd = 0
+    n_clutter_fwd = 0
+    density_radius = 1.30
+
+    for i, r in enumerate(ranges):
+        if r is None or not math.isfinite(r) or r < range_min or r > range_max:
+            continue
+
+        angle = angle_min + i * angle_increment
+        # Transform from sensor frame to robot base_link frame
+        x_r = r * math.cos(angle) + sx
+        y_r = r * math.sin(angle) + sy
+        dist_origin = math.hypot(x_r, y_r)
+
+        if dist_origin < closest_dist:
+            closest_dist = dist_origin
+            closest_x = x_r
+            closest_y = y_r
+
+        # Rotational clearance relative to circumscribed robot boundary
+        rot_clear = dist_origin - (r_circ + lat_margin)
+        if rot_clear < min_rot_clearance:
+            min_rot_clearance = rot_clear
+
+        # Curvature offset of swept corridor when steering
+        y_curv = 0.25 * omega_cmd * max(0.0, x_r - front_offset)
+        y_err = abs(y_r - y_curv)
+
+        # Forward corridor
+        if front_offset < x_r <= (front_offset + lookahead):
+            if y_err <= corridor_half_w:
+                clearance = x_r - front_offset
+                if clearance < min_fwd_clearance:
+                    min_fwd_clearance = clearance
+
+            # Forward clutter evaluation
+            if -math.radians(60.0) <= angle <= math.radians(60.0):
+                n_valid_fwd += 1
+                if dist_origin <= density_radius:
+                    n_clutter_fwd += 1
+
+        # Reverse corridor
+        if (rear_offset - lookahead) <= x_r < rear_offset:
+            if abs(y_r) <= corridor_half_w:
+                clearance = rear_offset - x_r
+                if clearance < min_rev_clearance:
+                    min_rev_clearance = clearance
+
+    density = (float(n_clutter_fwd) / float(n_valid_fwd)) if n_valid_fwd > 0 else 0.0
+    density = max(0.0, min(1.0, density))
+
+    return {
+        "forward_clearance": min_fwd_clearance,
+        "reverse_clearance": min_rev_clearance,
+        "rotational_clearance": min_rot_clearance,
+        "closest_distance": closest_dist,
+        "closest_x": closest_x,
+        "closest_y": closest_y,
+        "density_rho": density,
+    }
+
+
+# Pure function speed policies
+def policy_fixed(v_req: float, d_clear: float, d_margin: float) -> float:
+    """Fixed baseline speed policy: drives at nominal requested speed until emergency boundary."""
+    if d_clear <= d_margin:
+        return 0.0
+    return v_req
+
+
+def policy_distance_linear(v_req: float, d_clear: float, d_margin: float, d_slow: float = 2.00) -> float:
+    """Distance-only linear deceleration policy between d_margin and d_slow."""
+    if d_clear <= d_margin:
+        return 0.0
+    if d_clear >= d_slow:
+        return v_req
+    scale = (d_clear - d_margin) / max(0.05, (d_slow - d_margin))
+    return float(v_req * max(0.0, min(1.0, scale)))
+
+
+def policy_distance_braking(v_req: float, d_clear: float, d_base: float = 0.45, a_brake: float = 0.60) -> float:
+    """Physics-based stoppable velocity limit: v_max = sqrt(2 * a_brake * max(0, d_clear - d_base))."""
+    if d_clear <= d_base:
+        return 0.0
+    stopping_dist = max(0.0, d_clear - d_base)
+    v_stoppable = math.sqrt(2.0 * max(0.1, a_brake) * stopping_dist)
+    return float(min(v_req, v_stoppable))
+
+
+def policy_density_only(v_req: float, density: float, d_clear: float, d_margin: float, density_influence: float = 0.60, c_min: float = 0.25) -> float:
+    """Density-only speed attenuation: S_dens = 1 - k * rho."""
+    if d_clear <= d_margin:
+        return 0.0
+    dens_clamped = max(0.0, min(1.0, density))
+    c_factor = max(c_min, min(1.0, 1.0 - density_influence * dens_clamped))
+    return float(v_req * c_factor)
+
+
+def policy_distance_density(v_req: float, d_clear: float, density: float, d_margin: float, d_slow: float = 2.00, density_influence: float = 0.60, c_min: float = 0.25) -> float:
+    """Combined distance linear ramp x clutter density attenuation."""
+    if d_clear <= d_margin:
+        return 0.0
+    s_dist = 1.0 if d_clear >= d_slow else max(0.0, min(1.0, (d_clear - d_margin) / max(0.05, (d_slow - d_margin))))
+    dens_clamped = max(0.0, min(1.0, density))
+    c_factor = max(c_min, min(1.0, 1.0 - density_influence * dens_clamped))
+    return float(v_req * s_dist * c_factor)
+
+
+def policy_distance_density_braking(v_req: float, d_clear: float, density: float, d_base: float = 0.45, a_brake: float = 0.60, density_influence: float = 0.60, c_min: float = 0.25) -> float:
+    """Combined physics-based braking limit x clutter density attenuation."""
+    if d_clear <= d_base:
+        return 0.0
+    stopping_dist = max(0.0, d_clear - d_base)
+    v_stoppable = math.sqrt(2.0 * max(0.1, a_brake) * stopping_dist)
+    dens_clamped = max(0.0, min(1.0, density))
+    c_factor = max(c_min, min(1.0, 1.0 - density_influence * dens_clamped))
+    return float(min(v_req, v_stoppable) * c_factor)
+
+
+def evaluate_speed_policy(
+    policy_name: str,
+    v_req: float,
+    d_clear: float,
+    density: float,
+    d_margin: float,
+    d_slow: float = 2.00,
+    d_base: float = 0.45,
+    a_brake: float = 0.60,
+    density_influence: float = 0.60,
+    c_min: float = 0.25,
+) -> float:
+    """Selects and computes commanded speed for the requested policy name."""
+    name = policy_name.strip().lower()
+    if name == 'fixed':
+        return policy_fixed(v_req, d_clear, d_margin)
+    elif name == 'distance_linear':
+        return policy_distance_linear(v_req, d_clear, d_margin, d_slow)
+    elif name == 'distance_braking':
+        return policy_distance_braking(v_req, d_clear, d_base, a_brake)
+    elif name == 'density_only':
+        return policy_density_only(v_req, density, d_clear, d_margin, density_influence, c_min)
+    elif name == 'distance_density':
+        return policy_distance_density(v_req, d_clear, density, d_margin, d_slow, density_influence, c_min)
+    elif name in ('distance_density_braking', 'braking_density'):
+        return policy_distance_density_braking(v_req, d_clear, density, d_base, a_brake, density_influence, c_min)
+    else:
+        # Default to distance_density
+        return policy_distance_density(v_req, d_clear, density, d_margin, d_slow, density_influence, c_min)

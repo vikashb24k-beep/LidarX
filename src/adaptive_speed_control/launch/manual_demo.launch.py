@@ -40,6 +40,7 @@ def generate_launch_description():
         'csv_filename', default_value='results/manual_metrics.csv',
         description='Path for metrics CSV output'
     )
+    fault_profile_arg = DeclareLaunchArgument('fault_profile', default_value='none', description='LiDAR fault profile')
 
     # 1. Gazebo Simulation & Robot Spawning
     sim_launch = IncludeLaunchDescription(
@@ -82,6 +83,15 @@ def generate_launch_description():
 
         # Adaptive Speed Controller (Sole publisher to /cmd_vel)
         actions.append(Node(
+            package='twist_mux', executable='twist_mux', name='twist_mux', output='screen',
+            parameters=[os.path.join(pkg_control, 'config', 'twist_mux.yaml')]
+        ))
+        actions.append(Node(
+            package='adaptive_speed_control', executable='scan_fault_injector_node',
+            name='scan_fault_injector_node', output='screen',
+            parameters=[{'fault_profile': LaunchConfiguration('fault_profile')}]
+        ))
+        actions.append(Node(
             package='adaptive_speed_control',
             executable='adaptive_speed_controller_node',
             name='adaptive_speed_controller_node',
@@ -96,6 +106,10 @@ def generate_launch_description():
                 'max_acceleration': 0.60,
                 'enable_corridor_stop': False,
             }]
+        ))
+        actions.append(Node(
+            package='adaptive_speed_control', executable='collision_monitor_node',
+            name='collision_monitor_node', output='screen'
         ))
 
         # Odometry Monitor (HUD & RViz markers)
@@ -170,6 +184,7 @@ def generate_launch_description():
         record_arg,
         challenge_arg,
         csv_file_arg,
+        fault_profile_arg,
         sim_launch,
         OpaqueFunction(function=setup_manual_demo),
     ])

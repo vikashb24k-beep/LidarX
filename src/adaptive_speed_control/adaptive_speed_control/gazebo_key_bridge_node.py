@@ -9,7 +9,7 @@ from geometry_msgs.msg import Twist
 class GazeboKeyBridgeNode(Node):
     """
     Bridges Gazebo Sim KeyPublisher GUI events (/keyboard/keypress)
-    to the adaptive speed controller's requested velocity (/cmd_vel_in).
+    to twist_mux's teleoperation input (/cmd_vel_teleop).
     Allows driving when the Gazebo 3D simulation window has focus.
     """
 
@@ -28,7 +28,7 @@ class GazeboKeyBridgeNode(Node):
         self.key_sub = self.create_subscription(Int32, '/keyboard/keypress', self.on_keypress, 10)
 
         # Publishers
-        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_in', 10)
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_teleop', 10)
         self.mode_pub = self.create_publisher(String, '/control_mode', 10)
         self.adaptive_pub = self.create_publisher(Bool, '/toggle_adaptive', 10)
 

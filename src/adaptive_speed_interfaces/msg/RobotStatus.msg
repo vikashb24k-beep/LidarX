@@ -12,3 +12,6 @@ float32 scale_density
 float32 speed_scale
 string nearest_obstacle_direction
 float32 time_to_collision
+int32 collisions
+int32 near_misses
+float32 clearance

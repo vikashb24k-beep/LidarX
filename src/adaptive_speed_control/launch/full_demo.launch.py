@@ -2,9 +2,10 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
+from launch.actions import ExecuteProcess
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 
 
@@ -44,6 +45,8 @@ def generate_launch_description():
         'csv_filename', default_value='results/demo_metrics.csv',
         description='Path for metrics CSV output'
     )
+    fault_profile_arg = DeclareLaunchArgument('fault_profile', default_value='none', description='LiDAR fault profile')
+    bag_arg = DeclareLaunchArgument('bag', default_value='false', description='Record evaluation topics with ros2 bag')
 
     # 1. Simulation and robot spawn
     sim_launch = IncludeLaunchDescription(
@@ -95,6 +98,7 @@ def generate_launch_description():
                 'navigator_params': nav_config,
                 'auto_start': LaunchConfiguration('autostart'),
                 'adaptive_enabled': LaunchConfiguration('adaptive_enabled'),
+                'fault_profile': LaunchConfiguration('fault_profile'),
             }.items()
         )
         actions.append(demo_launch)
@@ -122,6 +126,15 @@ def generate_launch_description():
         }]
     )
 
+    # ros2 bag respects the simulated clock when replayed with --clock.  This
+    # deliberately records the raw and degraded scans for fault diagnosis.
+    bag_recorder = ExecuteProcess(
+        cmd=['ros2', 'bag', 'record', '-o', PythonExpression(["'bags/scenario_' + '", LaunchConfiguration('scenario'), "'"]),
+             '/scan', '/scan_raw', '/odom', '/cmd_vel_in', '/cmd_vel', '/robot_status',
+             '/obstacle_info', '/diagnostics', '/tf', '/clock', '/contacts'],
+        condition=IfCondition(LaunchConfiguration('bag')), output='screen'
+    )
+
     return LaunchDescription([
         scenario_arg,
         headless_arg,
@@ -131,8 +144,11 @@ def generate_launch_description():
         adaptive_enabled_arg,
         log_metrics_arg,
         csv_file_arg,
+        fault_profile_arg,
+        bag_arg,
         sim_launch,
         OpaqueFunction(function=setup_scenario_components),
         dashboard_node,
         logger_node,
+        bag_recorder,
     ])

@@ -1,0 +1,71 @@
+# Sensor LiDAR fault injection presets
+# Used by scan_fault_injector_node.py
+# All parameters can also be tuned at runtime via `ros2 param set`
+
+fault_profiles:
+  none:
+    noise_sigma: 0.0
+    noise_range_proportional: false
+    dropout_prob: 0.0
+    dropout_value: "inf"
+    delay_ms: 0.0
+    drop_scan_prob: 0.0
+    frozen_scan_sec: 0.0
+    blind_sector_start_deg: 0.0
+    blind_sector_end_deg: 0.0
+
+  mild_noise:
+    noise_sigma: 0.03
+    noise_range_proportional: false
+    dropout_prob: 0.02
+    dropout_value: "inf"
+    delay_ms: 0.0
+    drop_scan_prob: 0.0
+    frozen_scan_sec: 0.0
+    blind_sector_start_deg: 0.0
+    blind_sector_end_deg: 0.0
+
+  heavy_noise:
+    noise_sigma: 0.10
+    noise_range_proportional: true
+    dropout_prob: 0.05
+    dropout_value: "inf"
+    delay_ms: 0.0
+    drop_scan_prob: 0.0
+    frozen_scan_sec: 0.0
+    blind_sector_start_deg: 0.0
+    blind_sector_end_deg: 0.0
+
+  dropout_10:
+    noise_sigma: 0.0
+    noise_range_proportional: false
+    dropout_prob: 0.10
+    dropout_value: "inf"
+    delay_ms: 0.0
+    drop_scan_prob: 0.0
+    frozen_scan_sec: 0.0
+    blind_sector_start_deg: 0.0
+    blind_sector_end_deg: 0.0
+
+  delay_200ms:
+    noise_sigma: 0.0
+    noise_range_proportional: false
+    dropout_prob: 0.0
+    dropout_value: "inf"
+    delay_ms: 200.0
+    drop_scan_prob: 0.0
+    frozen_scan_sec: 0.0
+    blind_sector_start_deg: 0.0
+    blind_sector_end_deg: 0.0
+
+  combined_worst:
+    noise_sigma: 0.08
+    noise_range_proportional: true
+    dropout_prob: 0.10
+    dropout_value: "inf"
+    delay_ms: 150.0
+    drop_scan_prob: 0.05
+    frozen_scan_sec: 0.0
+    blind_sector_start_deg: 0.0
+    blind_sector_end_deg: 0.0
+

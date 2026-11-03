@@ -153,7 +153,8 @@ def generate_launch_description():
                 "/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist",
                 "/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry",
                 "/joint_states@sensor_msgs/msg/JointState@gz.msgs.Model",
-                "/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan",
+                "/scan_raw@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+                "/contacts@ros_gz_interfaces/msg/Contacts[gz.msgs.Contacts",
                 f"/world/{world_name}/set_pose@ros_gz_interfaces/srv/SetEntityPose"
             ],
             output="screen",

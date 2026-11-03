@@ -27,6 +27,10 @@ def generate_launch_description():
         'adaptive_enabled', default_value='true',
         description='Flag to enable adaptive speed policy (false for fixed baseline)'
     )
+    fault_profile_arg = DeclareLaunchArgument(
+        'fault_profile', default_value='none',
+        description='LiDAR fault profile applied between /scan_raw and /scan'
+    )
 
     # 1. Sole actuator arbiter publishing to /cmd_vel
     controller_node = Node(
@@ -52,6 +56,24 @@ def generate_launch_description():
         ]
     )
 
+    # Keep velocity arbitration upstream of the final safety stage.  Teleop
+    # has higher priority than navigation; /cmd_vel_in is twist_mux output.
+    mux_node = Node(
+        package='twist_mux', executable='twist_mux', name='twist_mux', output='screen',
+        parameters=[os.path.join(pkg_share, 'config', 'twist_mux.yaml')]
+    )
+
+    fault_injector_node = Node(
+        package='adaptive_speed_control', executable='scan_fault_injector_node',
+        name='scan_fault_injector_node', output='screen',
+        parameters=[{'fault_profile': LaunchConfiguration('fault_profile')}]
+    )
+
+    collision_monitor_node = Node(
+        package='adaptive_speed_control', executable='collision_monitor_node',
+        name='collision_monitor_node', output='screen'
+    )
+
     # 3. Odometry & HUD monitor publishing to /robot_status and RViz markers
     monitor_node = Node(
         package='adaptive_speed_control',
@@ -65,7 +87,11 @@ def generate_launch_description():
         navigator_params_arg,
         auto_start_arg,
         adaptive_enabled_arg,
+        fault_profile_arg,
+        mux_node,
+        fault_injector_node,
         controller_node,
         navigator_node,
         monitor_node,
+        collision_monitor_node,
     ])

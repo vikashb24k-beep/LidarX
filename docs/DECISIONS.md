@@ -92,4 +92,10 @@ This log records autonomous engineering decisions, rationales, and architectural
   5. ANSI-colored terminal HUD from `odometry_monitor_node`.
 - **Evaluation of Gazebo-Side 3D Text Marker:** Gazebo transport text markers published via `/sensors/marker` were evaluated. While functional in full GUI rendering, they are ignored by the headless rendering backend and do not reliably persist across client disconnects. Consequently, RViz text markers and the live matplotlib dashboard are designated as the canonical visualizers.
 - **Impact:** Operators have instant visual awareness of speed, safety margin, and active zone in RViz, GUI, and console.
+# Add-on robustness integration
+
+- Gazebo publishes LiDAR as `/scan_raw`; `scan_fault_injector_node` is the sole bridge to `/scan`, retaining the incoming header stamp and frame so latency is detected from simulated time.
+- `twist_mux` is intentionally before the adaptive controller: teleop and navigation can be arbitrated, but neither can bypass the final `/cmd_vel` safety publisher.
+- Physical contact monitoring uses the Gazebo `Contacts` bridge with a footprint-clearance fallback. A positive-control collision run remains required before quoting zero-collision results.
+- The controller currently self-configures/self-activates for compatibility with existing launch files. The separately installed lifecycle manager is not launched because the waypoint navigator has not yet been converted to a lifecycle node; this is a known incomplete Phase C item.
 

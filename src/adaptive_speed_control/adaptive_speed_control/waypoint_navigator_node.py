@@ -22,7 +22,7 @@ class WaypointNavigatorNode(Node):
     - Full State Machine: IDLE, DRIVE, WAITING, AVOID_OBSTACLE, RECOVERY, GOAL_REACHED, FAILED.
     - Follows arbitrary sequential 2D waypoints loaded via YAML parameters.
     - Subscribes to /odom for pose tracking and /obstacle_info for reactive obstacle avoidance.
-    - Publishes desired velocities to /cmd_vel_in.
+    - Publishes desired velocities to /cmd_vel_nav; twist_mux arbitrates upstream of safety.
     - Dynamic obstacle soft-stop (WAITING) and automatic recovery behaviors.
     - Services: /start_navigation, /stop_navigation, /reset_navigation.
     """
@@ -73,8 +73,9 @@ class WaypointNavigatorNode(Node):
         self.obstacle_sub = self.create_subscription(ObstacleInfo, '/obstacle_info', self.on_obstacle_info, 10)
         self.mode_sub = self.create_subscription(String, '/control_mode', self.on_control_mode, 10)
 
-        # Publisher to /cmd_vel_in
-        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_in', 10)
+        # Navigator is intentionally upstream of twist_mux.  Only the safety
+        # controller publishes /cmd_vel to Gazebo.
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_nav', 10)
 
         # Services
         self.start_srv = self.create_service(Trigger, '/start_navigation', self.handle_start_nav)

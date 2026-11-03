@@ -39,6 +39,9 @@ setup(
             'challenge_scoring_node = adaptive_speed_control.challenge_scoring_node:main',
             'clear_barrier = adaptive_speed_control.clear_barrier:main',
             'reset_barrier = adaptive_speed_control.clear_barrier:reset_main',
+            'scan_fault_injector_node = adaptive_speed_control.scan_fault_injector_node:main',
+            'collision_monitor_node = adaptive_speed_control.collision_monitor_node:main',
+            'lifecycle_manager_node = adaptive_speed_control.lifecycle_manager_node:main',
             # Backward-compatible script aliases
             'distance_node = adaptive_speed_control.distance_node:main',
             'ui_node = adaptive_speed_control.ui_node:main',

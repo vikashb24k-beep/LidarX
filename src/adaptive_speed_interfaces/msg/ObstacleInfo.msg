@@ -11,3 +11,4 @@ float32 scale_distance
 float32 scale_density
 float32 speed_scale
 float32 time_to_collision
+float32 clearance

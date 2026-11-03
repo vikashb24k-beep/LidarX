@@ -44,7 +44,7 @@ HELP_TEXT = """
 class KeyboardTeleopNode(Node):
     """
     Real-time interactive keyboard teleoperation node for mobile robots.
-    - Publishes desired velocities strictly to /cmd_vel_in at 20 Hz.
+    - Publishes desired velocities strictly to /cmd_vel_teleop at 20 Hz.
     - Hold-to-move semantics: commands expire after key_timeout seconds.
     - Mode switching (MANUAL / AUTONOMOUS) published to /control_mode.
     - Adaptive scaling toggle published to /toggle_adaptive.
@@ -70,7 +70,7 @@ class KeyboardTeleopNode(Node):
         self.min_allowed_speed = float(self.get_parameter('min_allowed_speed').value)
 
         # Publishers
-        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_in', 10)
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_teleop', 10)
         self.mode_pub = self.create_publisher(String, '/control_mode', 10)
         self.adaptive_pub = self.create_publisher(Bool, '/toggle_adaptive', 10)
 

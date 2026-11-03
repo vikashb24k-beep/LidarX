@@ -1,0 +1,16 @@
+# Robot collision footprint and kinematic safety geometry
+# Extracted from mogi_bot URDF collision models
+robot_footprint:
+  length: 0.40
+  width: 0.35
+  half_width: 0.175
+  front_offset: 0.20
+  rear_offset: -0.20
+  sensor_offset_x: 0.15
+  sensor_offset_y: 0.0
+  circumscribed_radius: 0.266
+  lateral_margin: 0.08
+  a_brake_max: 0.60
+  t_reaction: 0.10
+  default_lookahead: 3.50
+

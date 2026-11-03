@@ -74,4 +74,9 @@ All notable changes to the **Adaptive Speed Control in Cluttered Environments** 
 - `launch/start_to_end_demonstration.launch.py`: Launches controller, waypoint navigator, and odometry monitor.
 - `launch/baseline_fixed_speed.launch.py`: Fixed-speed baseline demonstration for performance comparison.
 - `launch/full_demo.launch.py`: Complete system launcher (Gazebo Harmonic, bridge, robot spawn, controller, navigator, HUD, and optional metrics logger).
+# Unreleased — robustness integration
+
+- Wired fault injection, collision monitoring, and twist mux into autonomous and manual launch paths.
+- Routed keyboard/Gazebo key commands to `/cmd_vel_teleop` and waypoint navigation to `/cmd_vel_nav`.
+- Added entry points, bag ignore rule, replay and offline CSV analysis utilities.
 

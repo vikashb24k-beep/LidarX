@@ -234,6 +234,20 @@ source install/setup.bash
 
 ## 7. Running the Demonstrations
 
+### Robustness, footprint safety, and evaluation
+
+Gazebo LiDAR is bridged to `/scan_raw`; `scan_fault_injector_node` publishes the controller-facing `/scan`. Select a reproducible profile with `fault_profile:=none|mild_noise|heavy_noise|dropout_10|delay_200ms|combined_worst`. Delayed scans retain their original header time, and the controller stops on stale header timestamps.
+
+The final command path is `/cmd_vel_teleop` or `/cmd_vel_nav` → `twist_mux` → `/cmd_vel_in` → adaptive safety controller → `/cmd_vel`. This means keyboard teleoperation wins over navigation but cannot bypass emergency stop, sensor timeout, the footprint corridor, or braking margin:
+
+`d_margin(v) = d_base + v(t_reaction + t_scan_latency) + v²/(2 a_brake)`.
+
+Available policies are `fixed`, `distance_linear`, `density_only`, `distance_density`, `distance_braking`, and `distance_density_braking`. `fixed` is an ablation baseline only: emergency stop and sensor timeout remain enabled. `distance_density` is the normal default; braking variants are appropriate where stopping distance is the main constraint.
+
+For a headless fault run, use `ros2 launch adaptive_speed_control full_demo.launch.py scenario:=3 headless:=true fault_profile:=delay_200ms`. Use `bag:=true` to record core safety topics under `bags/`; replay with `scripts/replay_bag.sh <bag>` and extract telemetry with `scripts/analyze_bag.py <bag>`. Summarise per-run CSVs with `scripts/analyze_results.py results`. Open `rqt_robot_monitor` to inspect `/diagnostics` during a GUI run.
+
+No fault-study or ablation claims are reported in this README yet: a complete headless scenario matrix and a deliberate collision positive-control run still need to be executed.
+
 ### 7.1 Complete Autonomous Start-to-End Demonstration (Headless or GUI)
 
 Run the full demonstration in headless mode (recommended for CI or remote environments):
