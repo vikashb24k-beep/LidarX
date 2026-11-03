@@ -8,7 +8,7 @@ from rcl_interfaces.msg import SetParametersResult
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
-from std_msgs.msg import Float32
+from std_msgs.msg import Float32, String, Bool
 from std_srvs.srv import Trigger
 
 from adaptive_speed_interfaces.msg import ObstacleInfo
@@ -18,6 +18,10 @@ from adaptive_speed_control.utils.speed_policy import (
     calculate_adaptive_speed,
     process_laser_scan_sectors,
     rate_limit_velocity,
+    compute_distance_factor,
+    compute_density_factor,
+    compute_limit_reason,
+    compute_time_to_collision,
 )
 
 
@@ -48,6 +52,7 @@ class AdaptiveSpeedControllerNode(Node):
         self.declare_parameter('cmd_timeout', 0.50)
         self.declare_parameter('control_rate', 20.0)
         self.declare_parameter('adaptive_enabled', True)
+        self.declare_parameter('enable_corridor_stop', False)
 
         self._load_parameters()
         self.add_on_set_parameters_callback(self._on_parameters_set)
@@ -56,6 +61,8 @@ class AdaptiveSpeedControllerNode(Node):
         self.scan_sub = self.create_subscription(LaserScan, '/scan', self.on_scan, 10)
         self.cmd_in_sub = self.create_subscription(Twist, '/cmd_vel_in', self.on_cmd_vel_in, 10)
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.on_odom, 10)
+        self.mode_sub = self.create_subscription(String, '/control_mode', self.on_control_mode, 10)
+        self.adaptive_toggle_sub = self.create_subscription(Bool, '/toggle_adaptive', self.on_toggle_adaptive, 10)
 
         # Publishers
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -81,6 +88,13 @@ class AdaptiveSpeedControllerNode(Node):
         self.right_distance = float('inf')
         self.obstacle_density = 0.0
         self.safety_state = 'STARTING'
+
+        self.limit_reason = "CLEAR"
+        self.scale_distance = 1.0
+        self.scale_density = 1.0
+        self.speed_scale = 1.0
+        self.time_to_collision = -1.0
+        self.control_mode = "MANUAL"
 
         self.last_cmd_linear = 0.0
         self.last_log_time = 0.0
@@ -115,6 +129,7 @@ class AdaptiveSpeedControllerNode(Node):
         self.cmd_timeout = float(self.get_parameter('cmd_timeout').value)
         self.control_rate = float(self.get_parameter('control_rate').value)
         self.adaptive_enabled = bool(self.get_parameter('adaptive_enabled').value)
+        self.enable_corridor_stop = bool(self.get_parameter('enable_corridor_stop').value)
 
     def _on_parameters_set(self, params):
         for param in params:
@@ -132,8 +147,18 @@ class AdaptiveSpeedControllerNode(Node):
                 self.density_influence = float(param.value)
             elif param.name == 'adaptive_enabled':
                 self.adaptive_enabled = bool(param.value)
+            elif param.name == 'enable_corridor_stop':
+                self.enable_corridor_stop = bool(param.value)
 
         return SetParametersResult(successful=True)
+
+    def on_control_mode(self, msg: String):
+        self.control_mode = msg.data.upper()
+        self.get_logger().info(f"Control mode set to: {self.control_mode}")
+
+    def on_toggle_adaptive(self, msg: Bool):
+        self.adaptive_enabled = bool(msg.data)
+        self.get_logger().info(f"Adaptive scaling toggled to: {'ON' if self.adaptive_enabled else 'OFF (emergency stop active)'}")
 
     def handle_set_threshold(self, request, response):
         new_th = request.threshold
@@ -197,6 +222,13 @@ class AdaptiveSpeedControllerNode(Node):
         self.obstacle_density = sectors["density_rho"]
 
         # Telemetry publisher
+        self._publish_obstacle_info()
+
+        dens_msg = Float32()
+        dens_msg.data = float(self.obstacle_density)
+        self.density_pub.publish(dens_msg)
+
+    def _publish_obstacle_info(self):
         info = ObstacleInfo()
         info.closest_distance = float(self.closest_distance)
         info.direction = str(self.closest_direction)
@@ -206,33 +238,51 @@ class AdaptiveSpeedControllerNode(Node):
         info.right_distance = float(self.right_distance)
         info.density_rho = float(self.obstacle_density)
         info.zone = str(self.safety_state)
+        info.limit_reason = str(self.limit_reason)
+        info.scale_distance = float(self.scale_distance)
+        info.scale_density = float(self.scale_density)
+        info.speed_scale = float(self.speed_scale)
+        info.time_to_collision = float(self.time_to_collision)
         self.info_pub.publish(info)
-
-        dens_msg = Float32()
-        dens_msg.data = float(self.obstacle_density)
-        self.density_pub.publish(dens_msg)
 
     def control_loop(self):
         now = time.time()
 
-        # Check destination reached
-        if self.robot_x >= 8.8:
+        # Check destination reached (only if corridor stop is enabled)
+        if self.enable_corridor_stop and self.robot_x >= 8.8:
             self.safety_state = "DESTINATION_REACHED"
+            self.limit_reason = "CLEAR"
             self.cmd_pub.publish(Twist())
+            self._publish_obstacle_info()
             self._log_status(0.0, 0.0, 0.0)
             return
 
         # Fail-safe 1: Sensor timeout
         if (now - self.last_scan_time) > self.sensor_timeout:
             self.safety_state = "SENSOR_TIMEOUT"
+            self.limit_reason = "SENSOR_TIMEOUT"
+            self.scale_distance = 0.0
+            self.scale_density = 0.0
+            self.speed_scale = 0.0
+            self.time_to_collision = -1.0
             self.cmd_pub.publish(Twist())
+            self._publish_obstacle_info()
             self._log_status(0.0, 0.0, 0.0)
             return
 
         # Fail-safe 2: Upstream command timeout
         if (now - self.last_cmd_time) > self.cmd_timeout:
             self.safety_state = "IDLE"
+            if self.front_distance <= self.threshold:
+                self.limit_reason = f"EMERGENCY_STOP ({self.front_distance:.2f} m)"
+            else:
+                self.limit_reason = "CLEAR"
+            self.scale_distance = compute_distance_factor(self.front_distance, self.threshold, self.slowdown_distance)
+            self.scale_density = compute_density_factor(self.obstacle_density, self.density_influence, self.c_min)
+            self.speed_scale = 0.0
+            self.time_to_collision = -1.0
             self.cmd_pub.publish(Twist())
+            self._publish_obstacle_info()
             self._log_status(0.0, 0.0, 0.0)
             return
 
@@ -265,11 +315,32 @@ class AdaptiveSpeedControllerNode(Node):
         self.last_cmd_linear = v_cmd
         self.safety_state = next_state
 
+        # Compute diagnostic feedback fields
+        self.scale_distance = compute_distance_factor(self.front_distance, self.threshold, self.slowdown_distance)
+        self.scale_density = compute_density_factor(self.obstacle_density, self.density_influence, self.c_min)
+        self.speed_scale = scale
+        self.time_to_collision = compute_time_to_collision(self.front_distance, abs(v_cmd))
+        self.limit_reason = compute_limit_reason(
+            v_req=v_req,
+            v_cmd_target=v_cmd_target,
+            v_cmd_actual=v_cmd,
+            front_dist=self.front_distance,
+            density=self.obstacle_density,
+            threshold=self.threshold,
+            slowdown_dist=self.slowdown_distance,
+            density_influence=self.density_influence,
+            c_min=self.c_min,
+            max_lin_speed=self.max_linear_speed,
+            is_sensor_timeout=False,
+            adaptive_enabled=self.adaptive_enabled,
+        )
+
         cmd = Twist()
         cmd.linear.x = float(v_cmd)
         cmd.angular.z = float(omega_cmd)
         self.cmd_pub.publish(cmd)
 
+        self._publish_obstacle_info()
         self._log_status(v_req, v_cmd, scale)
 
     def _log_status(self, v_req, v_cmd, scale):

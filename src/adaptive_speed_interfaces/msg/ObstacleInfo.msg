@@ -6,3 +6,8 @@ float32 left_distance
 float32 right_distance
 float32 density_rho
 string zone
+string limit_reason
+float32 scale_distance
+float32 scale_density
+float32 speed_scale
+float32 time_to_collision

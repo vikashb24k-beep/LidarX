@@ -364,7 +364,82 @@ def generate_comparison_summary(results_dir: str, output_dir: str):
     print(f"[SUCCESS] Saved summary table to {summary_md}")
 
 
+def plot_manual_drive(csv_file: str, output_dir: str):
+    """Generates comprehensive plots for an interactive manual driving session."""
+    if not os.path.exists(csv_file):
+        print(f"[ERROR] File not found: {csv_file}")
+        return
+
+    data = read_csv_data(csv_file)
+    n_pts = len(data['elapsed_time_s'])
+    if n_pts < 2:
+        print(f"[WARN] Insufficient data points in {csv_file}")
+        return
+
+    basename = os.path.splitext(os.path.basename(csv_file))[0]
+    os.makedirs(output_dir, exist_ok=True)
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
+
+    # 1. Speed profile with requested vs safe vs actual and zone background
+    t = data['elapsed_time_s']
+    ax1.plot(t, data['v_req'], label='Requested Speed (v_req)', color='#7f7f7f', linestyle=':', linewidth=1.5)
+    ax1.plot(t, data['v_cmd'], label='Safe Commanded Speed (v_safe)', color='#1f77b4', linewidth=2.0)
+    ax1.plot(t, data['v_actual'], label='Actual Odometry Speed (v_actual)', color='#2ca02c', linewidth=2.0)
+
+    # Zone shading
+    zone_colors = {
+        'FREE': '#d4edda',
+        'MODERATE': '#fff3cd',
+        'DENSE': '#ffeeba',
+        'CRITICAL_PROXIMITY': '#f8d7da',
+        'CONTROLLED_STOP': '#f8d7da',
+    }
+    for i in range(len(t) - 1):
+        z = data['zone'][i].upper()
+        col = '#ffffff'
+        for k, c in zone_colors.items():
+            if k in z:
+                col = c
+                break
+        ax1.axvspan(t[i], t[i + 1], color=col, alpha=0.35, linewidth=0)
+
+    ax1.set_ylabel('Velocity (m/s)', fontsize=11, fontweight='bold')
+    ax1.set_title(f'Manual Driving Speed Profile & Interaction ({basename})', fontsize=13, fontweight='bold')
+    ax1.grid(True, linestyle=':', alpha=0.6)
+    ax1.legend(loc='upper right')
+
+    # 2. Obstacle distance & Clutter Density
+    ax2.plot(t, data['front_dist'], label='Front Obstacle Dist (m)', color='#d62728', linewidth=2.0)
+    ax2.axhline(0.45, color='black', linestyle='--', linewidth=1.2, label='Safety Threshold (0.45m)')
+    ax2.axhline(2.00, color='gray', linestyle=':', linewidth=1.2, label='Slowdown Dist (2.00m)')
+    ax2.set_xlabel('Elapsed Time (s)', fontsize=11, fontweight='bold')
+    ax2.set_ylabel('Distance / Density', fontsize=11, fontweight='bold')
+    ax2.grid(True, linestyle=':', alpha=0.6)
+    ax2.legend(loc='upper right')
+
+    plt.tight_layout()
+    out_profile = os.path.join(output_dir, f'{basename}_manual_profile.png')
+    plt.savefig(out_profile, dpi=200)
+    plt.close()
+    print(f"[SUCCESS] Saved manual driving profile: {out_profile}")
+
+    # Plot 2D trajectory
+    plot_trajectory(csv_file, output_dir)
+
+
 def main():
+    if '--manual' in sys.argv:
+        idx = sys.argv.index('--manual')
+        if idx + 1 < len(sys.argv):
+            csv_file = sys.argv[idx + 1]
+            output_dir = sys.argv[idx + 2] if idx + 2 < len(sys.argv) and not sys.argv[idx + 2].startswith('--') else 'docs/figures'
+            plot_manual_drive(csv_file, output_dir)
+            return
+        else:
+            print("Usage: plot_results.py --manual <path_to_csv> [output_dir]")
+            return
+
     results_dir = sys.argv[1] if len(sys.argv) > 1 else 'results'
     output_dir = sys.argv[2] if len(sys.argv) > 2 else 'docs/figures'
 

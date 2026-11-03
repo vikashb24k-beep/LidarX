@@ -6,4 +6,9 @@ string state
 float32 distance_to_goal
 float32 distance_travelled
 float32 eta
-
+string limit_reason
+float32 scale_distance
+float32 scale_density
+float32 speed_scale
+string nearest_obstacle_direction
+float32 time_to_collision

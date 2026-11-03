@@ -50,6 +50,8 @@ class OdometryMonitorNode(Node):
         self.trajectory_pub = self.create_publisher(Marker, '/visualization_trajectory', 10)
         self.zone_ring_pub = self.create_publisher(Marker, '/visualization_zone_ring', 10)
         self.legend_pub = self.create_publisher(Marker, '/visualization_legend', 10)
+        self.danger_cone_pub = self.create_publisher(Marker, '/visualization_danger_cone', 10)
+        self.nearest_obstacle_pub = self.create_publisher(Marker, '/visualization_nearest_obstacle', 10)
         self.markers_pub = self.create_publisher(MarkerArray, '/robot_visual_markers', 10)
 
         # Odometry tracking
@@ -67,6 +69,13 @@ class OdometryMonitorNode(Node):
         self.current_state = "STARTING"
         self.front_dist = float('inf')
         self.density = 0.0
+        self.closest_dist = float('inf')
+        self.closest_direction = "unknown"
+        self.limit_reason = "CLEAR"
+        self.scale_distance = 1.0
+        self.scale_density = 1.0
+        self.speed_scale = 1.0
+        self.time_to_collision = -1.0
 
         # Rolling speed window for smooth ETA calculation
         self.speed_history = []
@@ -128,6 +137,14 @@ class OdometryMonitorNode(Node):
         self.current_zone = msg.zone
         self.front_dist = msg.front_distance
         self.density = msg.density_rho
+        self.closest_dist = msg.closest_distance
+        self.closest_direction = msg.direction
+        if hasattr(msg, 'limit_reason') and msg.limit_reason:
+            self.limit_reason = msg.limit_reason
+            self.scale_distance = msg.scale_distance
+            self.scale_density = msg.scale_density
+            self.speed_scale = msg.speed_scale
+            self.time_to_collision = msg.time_to_collision
 
     def _speed_to_rgba(self, speed: float) -> ColorRGBA:
         """Map velocity to RGBA: Green (fast), Yellow (moderate), Orange (slow), Red (stopped)."""
@@ -198,7 +215,8 @@ class OdometryMonitorNode(Node):
         marker_speed.scale.z = 0.28
         marker_speed.color = speed_col
         marker_speed.color.a = 1.0
-        marker_speed.text = f"speed {self.actual_speed:.2f} m/s | limit {self.speed_limit:.2f} | zone {self.current_zone}"
+        short_reason = self.limit_reason.split('+')[0].strip() if '+' in self.limit_reason else self.limit_reason
+        marker_speed.text = f"{self.actual_speed:.2f} m/s | {short_reason} | {self.current_zone}"
         self.speedometer_pub.publish(marker_speed)
         marker_array.markers.append(marker_speed)
 
@@ -253,6 +271,55 @@ class OdometryMonitorNode(Node):
         self.legend_pub.publish(marker_legend)
         marker_array.markers.append(marker_legend)
 
+        # 5. LiDAR Danger Cone in front sector
+        marker_cone = Marker()
+        marker_cone.header.frame_id = 'base_link'
+        marker_cone.header.stamp = stamp
+        marker_cone.ns = 'danger_cone'
+        marker_cone.id = 4
+        marker_cone.type = Marker.LINE_STRIP
+        marker_cone.action = Marker.ADD
+        marker_cone.scale.x = 0.04
+        marker_cone.color = zone_col
+        marker_cone.color.a = 0.85
+        p_origin = Point(x=0.0, y=0.0, z=0.05)
+        marker_cone.points.append(p_origin)
+        r_cone = 2.0
+        for angle_deg in range(-60, 65, 10):
+            rad = math.radians(angle_deg)
+            marker_cone.points.append(Point(x=float(r_cone * math.cos(rad)), y=float(r_cone * math.sin(rad)), z=0.05))
+        marker_cone.points.append(p_origin)
+        self.danger_cone_pub.publish(marker_cone)
+        marker_array.markers.append(marker_cone)
+
+        # 6. Nearest Obstacle Line
+        marker_line = Marker()
+        marker_line.header.frame_id = 'base_link'
+        marker_line.header.stamp = stamp
+        marker_line.ns = 'nearest_obstacle'
+        marker_line.id = 5
+        marker_line.type = Marker.LINE_LIST
+        marker_line.action = Marker.ADD
+        marker_line.scale.x = 0.05
+        marker_line.color = ColorRGBA(r=1.0, g=0.2, b=0.2, a=0.95)
+        if math.isfinite(self.closest_dist) and self.closest_dist < 10.0:
+            angle = 0.0
+            if 'left' in self.closest_direction.lower():
+                angle = math.radians(45.0)
+            elif 'right' in self.closest_direction.lower():
+                angle = math.radians(-45.0)
+            elif 'behind' in self.closest_direction.lower():
+                angle = math.radians(180.0)
+            p_start = Point(x=0.0, y=0.0, z=0.1)
+            p_end = Point(
+                x=float(self.closest_dist * math.cos(angle)),
+                y=float(self.closest_dist * math.sin(angle)),
+                z=0.1
+            )
+            marker_line.points.extend([p_start, p_end])
+        self.nearest_obstacle_pub.publish(marker_line)
+        marker_array.markers.append(marker_line)
+
         self.markers_pub.publish(marker_array)
 
     def monitor_loop(self):
@@ -278,6 +345,12 @@ class OdometryMonitorNode(Node):
         status.distance_to_goal = float(dist_to_goal)
         status.distance_travelled = float(self.distance_travelled)
         status.eta = float(min(999.0, eta))
+        status.limit_reason = str(self.limit_reason)
+        status.scale_distance = float(self.scale_distance)
+        status.scale_density = float(self.scale_density)
+        status.speed_scale = float(self.speed_scale)
+        status.nearest_obstacle_direction = str(self.closest_direction)
+        status.time_to_collision = float(self.time_to_collision)
         self.status_pub.publish(status)
 
         # Publish RViz visual markers

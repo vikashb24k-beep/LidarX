@@ -33,6 +33,10 @@ setup(
             'metrics_logger_node = adaptive_speed_control.metrics_logger_node:main',
             'moving_obstacle_node = adaptive_speed_control.moving_obstacle_node:main',
             'speed_dashboard_node = adaptive_speed_control.speed_dashboard_node:main',
+            'keyboard_teleop_node = adaptive_speed_control.keyboard_teleop_node:main',
+            'manual_dashboard_node = adaptive_speed_control.manual_dashboard_node:main',
+            'gazebo_key_bridge_node = adaptive_speed_control.gazebo_key_bridge_node:main',
+            'challenge_scoring_node = adaptive_speed_control.challenge_scoring_node:main',
             'clear_barrier = adaptive_speed_control.clear_barrier:main',
             'reset_barrier = adaptive_speed_control.clear_barrier:reset_main',
             # Backward-compatible script aliases

@@ -220,3 +220,93 @@ def rate_limit_velocity(v_target: float, v_current: float, max_accel: float, dt:
         # Instant deceleration allowed for rapid safety halting
         return v_target
 
+
+def compute_distance_factor(front_dist: float, threshold: float = 0.45, slowdown_dist: float = 2.00) -> float:
+    """
+    Computes distance attenuation factor D(d) in [0.0, 1.0].
+    """
+    if front_dist <= threshold:
+        return 0.0
+    if front_dist >= slowdown_dist:
+        return 1.0
+    factor = (front_dist - threshold) / (slowdown_dist - threshold)
+    return max(0.0, min(1.0, factor))
+
+
+def compute_density_factor(density: float, density_influence: float = 0.60, c_min: float = 0.25) -> float:
+    """
+    Computes clutter density attenuation factor C(rho) in [c_min, 1.0].
+    """
+    dens_clamped = max(0.0, min(1.0, density))
+    return max(c_min, min(1.0, 1.0 - density_influence * dens_clamped))
+
+
+def compute_time_to_collision(front_dist: float, current_speed: float) -> float:
+    """
+    Computes time-to-collision in seconds, or -1.0 if not closing.
+    """
+    if current_speed > 0.01 and math.isfinite(front_dist) and front_dist > 0.0:
+        return float(front_dist / current_speed)
+    return -1.0
+
+
+def compute_limit_reason(
+    v_req: float,
+    v_cmd_target: float,
+    v_cmd_actual: float,
+    front_dist: float,
+    density: float,
+    threshold: float = 0.45,
+    slowdown_dist: float = 2.00,
+    density_influence: float = 0.60,
+    c_min: float = 0.25,
+    max_lin_speed: float = 0.40,
+    is_sensor_timeout: bool = False,
+    adaptive_enabled: bool = True,
+) -> str:
+    """
+    Determines human-readable cause for speed limitation:
+      - SENSOR_TIMEOUT
+      - EMERGENCY_STOP (d.dd m)
+      - OBSTACLE_AHEAD (d.dd m) + CROWDED (rho d.dd)
+      - OBSTACLE_AHEAD (d.dd m)
+      - CROWDED (rho d.dd)
+      - SPEED_CAP (user)
+      - ACCEL_LIMIT (ramping)
+      - CLEAR
+    """
+    if is_sensor_timeout:
+        return "SENSOR_TIMEOUT"
+
+    if front_dist <= threshold:
+        return f"EMERGENCY_STOP ({front_dist:.2f} m)"
+
+    if not adaptive_enabled:
+        if v_req > max_lin_speed + 1e-4:
+            return "SPEED_CAP (user)"
+        return "CLEAR"
+
+    d_factor = compute_distance_factor(front_dist, threshold, slowdown_dist)
+    c_factor = compute_density_factor(density, density_influence, c_min)
+
+    obs_limiting = (d_factor < 0.999)
+    crowd_limiting = (c_factor < 0.999)
+
+    if obs_limiting and crowd_limiting:
+        return f"OBSTACLE_AHEAD ({front_dist:.2f} m) + CROWDED (rho {density:.2f})"
+    if obs_limiting:
+        return f"OBSTACLE_AHEAD ({front_dist:.2f} m)"
+    if crowd_limiting:
+        return f"CROWDED (rho {density:.2f})"
+
+    if v_req > max_lin_speed + 1e-4:
+        if v_cmd_actual < (max_lin_speed - 0.03):
+            return "ACCEL_LIMIT (ramping)"
+        return "SPEED_CAP (user)"
+
+    if v_req > 0.01 and v_cmd_actual < (v_cmd_target - 0.03):
+        return "ACCEL_LIMIT (ramping)"
+
+    return "CLEAR"
+
+

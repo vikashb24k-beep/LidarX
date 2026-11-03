@@ -5,6 +5,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
+from std_msgs.msg import String
 from std_srvs.srv import Trigger
 
 from adaptive_speed_interfaces.msg import ObstacleInfo
@@ -45,6 +46,7 @@ class WaypointNavigatorNode(Node):
         self.declare_parameter('wait_timeout', 4.0)
         self.declare_parameter('navigation_timeout', 180.0)
         self.declare_parameter('waypoints', [float('nan')])
+        self.declare_parameter('initial_mode', 'AUTONOMOUS')
 
         self._load_parameters()
 
@@ -69,6 +71,7 @@ class WaypointNavigatorNode(Node):
         # Subscribers
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.on_odom, 10)
         self.obstacle_sub = self.create_subscription(ObstacleInfo, '/obstacle_info', self.on_obstacle_info, 10)
+        self.mode_sub = self.create_subscription(String, '/control_mode', self.on_control_mode, 10)
 
         # Publisher to /cmd_vel_in
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel_in', 10)
@@ -135,6 +138,15 @@ class WaypointNavigatorNode(Node):
         self.stuck_timeout = float(self.get_parameter('stuck_timeout').value)
         self.wait_timeout = float(self.get_parameter('wait_timeout').value)
         self.navigation_timeout = float(self.get_parameter('navigation_timeout').value)
+        self.control_mode = str(self.get_parameter('initial_mode').value).upper()
+
+    def on_control_mode(self, msg: String):
+        prev = self.control_mode
+        self.control_mode = msg.data.upper()
+        if prev != self.control_mode:
+            self.get_logger().info(f"[NAV] Control mode changed: {prev} -> {self.control_mode}")
+            if self.control_mode == 'MANUAL':
+                self.cmd_pub.publish(Twist())
 
     @property
     def is_navigating(self) -> bool:
@@ -184,7 +196,7 @@ class WaypointNavigatorNode(Node):
         self.right_dist = msg.right_distance
 
     def navigation_loop(self):
-        if not self.has_odom or self.nav_state == 'IDLE':
+        if not self.has_odom or self.nav_state == 'IDLE' or self.control_mode == 'MANUAL':
             return
 
         now = time.time()
