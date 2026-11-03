@@ -59,7 +59,6 @@
     <sensor name="gpu_lidar" type="gpu_lidar">
       <update_rate>10</update_rate>
       <topic>scan_raw</topic>
-      <gz_frame_id>scan_link</gz_frame_id>
       <lidar>
         <scan>
           <horizontal>
@@ -86,7 +85,6 @@
             <mean>0.0</mean>
             <stddev>0.01</stddev>
         </noise>
-        <frame_id>scan_link</frame_id>
       </lidar>
       <always_on>1</always_on>
       <visualize>true</visualize>
