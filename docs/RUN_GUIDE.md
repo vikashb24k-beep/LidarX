@@ -20,7 +20,7 @@ colcon test-result --verbose
 
 Verified result: 49 tests passed.
 
-## 3. Autonomous demo [known issue]
+## 3. Autonomous demo
 
 ```bash
 export ROS_LOG_DIR=/tmp/ros-log
@@ -28,7 +28,7 @@ export GZ_LOG_PATH=/tmp/gz-log
 ros2 launch adaptive_speed_control full_demo.launch.py scenario:=1 headless:=true autostart:=true
 ```
 
-This command starts the complete stack. In this verified environment it stops safely in `SENSOR_TIMEOUT` because the bridged LaserScan cannot be converted by rclpy; see `TEST_REPORT.md`. Do not treat this as a successful autonomous run until that issue is fixed.
+This command starts the complete stack. Verified outcome for scenario 1: the controller receives `/scan`, leaves `SENSOR_TIMEOUT`, the robot reaches 0.40 m/s in clear space, and the navigator prints `DESTINATION REACHED`.
 
 Scenarios use `scenario:=1` through `scenario:=6`; select a baseline with `adaptive_enabled:=false`, and a fault profile with `fault_profile:=mild_noise` (also `heavy_noise`, `dropout_10`, `delay_200ms`, `combined_worst`).
 
@@ -54,7 +54,7 @@ Keys: `w` forward, `s` reverse, `a` left, `d` right, `x`/Space stop. Commands fl
 
 Add `bag:=true` to the full-demo launch, replay with `scripts/replay_bag.sh <bag-directory>`, and extract telemetry with `scripts/analyze_bag.py <bag-directory>`.
 
-If you see `SENSOR_TIMEOUT` immediately while `gz topic -e -t /scan_raw --msgtype gz.msgs.LaserScan --num 1` prints scans, you have the recorded bridge/type-support issue. Check that matching `ros_gz_bridge` and `ros_gz_interfaces` Jazzy packages are installed; a clean repair command on a fresh system is:
+If you see `SENSOR_TIMEOUT`, ensure the model uses `gpu_lidar` (not CPU `lidar`) and that the controller launch is using simulation time. Check the source scan directly:
 
 ```bash
 sudo apt install ros-jazzy-ros-gz-bridge ros-jazzy-ros-gz-interfaces ros-jazzy-sensor-msgs
