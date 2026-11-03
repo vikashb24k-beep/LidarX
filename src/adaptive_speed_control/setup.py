@@ -31,6 +31,8 @@ setup(
             'waypoint_navigator_node = adaptive_speed_control.waypoint_navigator_node:main',
             'odometry_monitor_node = adaptive_speed_control.odometry_monitor_node:main',
             'metrics_logger_node = adaptive_speed_control.metrics_logger_node:main',
+            'moving_obstacle_node = adaptive_speed_control.moving_obstacle_node:main',
+            'speed_dashboard_node = adaptive_speed_control.speed_dashboard_node:main',
             'clear_barrier = adaptive_speed_control.clear_barrier:main',
             'reset_barrier = adaptive_speed_control.clear_barrier:reset_main',
             # Backward-compatible script aliases

@@ -35,6 +35,7 @@ timeout --preserve-status "${DURATION}s" ros2 launch adaptive_speed_control full
     headless:=true \
     rviz:=false \
     autostart:=true \
+    adaptive_enabled:="${ADAPTIVE_FLAG}" \
     log_metrics:=true \
     csv_filename:="${CSV_FILE}" || true
 

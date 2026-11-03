@@ -1,0 +1,36 @@
+moving_obstacle_node:
+  ros__parameters:
+    world_name: "warehouse"
+    update_rate: 10.0
+    obstacles:
+      - "dynamic_worker_1"
+      - "dynamic_worker_2"
+      - "dynamic_worker_3"
+    obstacle_config:
+      dynamic_worker_1:
+        start_x: -5.0
+        start_y: -1.5
+        start_z: 0.85
+        end_x: -5.0
+        end_y: 1.0
+        end_z: 0.85
+        speed: 0.28
+        pause_duration: 0.8
+      dynamic_worker_2:
+        start_x: 1.5
+        start_y: 2.25
+        start_z: 0.85
+        end_x: 4.0
+        end_y: 2.25
+        end_z: 0.85
+        speed: 0.25
+        pause_duration: 0.8
+      dynamic_worker_3:
+        start_x: -6.5
+        start_y: 4.5
+        start_z: 0.85
+        end_x: -4.5
+        end_y: 4.5
+        end_z: 0.85
+        speed: 0.25
+        pause_duration: 0.5

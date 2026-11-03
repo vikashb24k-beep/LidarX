@@ -23,6 +23,10 @@ def generate_launch_description():
         'auto_start', default_value='true',
         description='Automatically begin autonomous corridor navigation'
     )
+    adaptive_enabled_arg = DeclareLaunchArgument(
+        'adaptive_enabled', default_value='true',
+        description='Flag to enable adaptive speed policy (false for fixed baseline)'
+    )
 
     # 1. Sole actuator arbiter publishing to /cmd_vel
     controller_node = Node(
@@ -30,10 +34,13 @@ def generate_launch_description():
         executable='adaptive_speed_controller_node',
         name='adaptive_speed_controller_node',
         output='screen',
-        parameters=[LaunchConfiguration('controller_params')]
+        parameters=[
+            LaunchConfiguration('controller_params'),
+            {'adaptive_enabled': LaunchConfiguration('adaptive_enabled')}
+        ]
     )
 
-    # 2. Autonomous corridor navigator publishing to /cmd_vel_in
+    # 2. Autonomous corridor / waypoint navigator publishing to /cmd_vel_in
     navigator_node = Node(
         package='adaptive_speed_control',
         executable='waypoint_navigator_node',
@@ -45,7 +52,7 @@ def generate_launch_description():
         ]
     )
 
-    # 3. Odometry & HUD monitor publishing to /robot_status
+    # 3. Odometry & HUD monitor publishing to /robot_status and RViz markers
     monitor_node = Node(
         package='adaptive_speed_control',
         executable='odometry_monitor_node',
@@ -57,6 +64,7 @@ def generate_launch_description():
         controller_params_arg,
         navigator_params_arg,
         auto_start_arg,
+        adaptive_enabled_arg,
         controller_node,
         navigator_node,
         monitor_node,

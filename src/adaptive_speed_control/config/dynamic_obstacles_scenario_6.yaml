@@ -1,0 +1,27 @@
+moving_obstacle_node:
+  ros__parameters:
+    world_name: "hospital"
+    update_rate: 10.0
+    obstacles:
+      - "dynamic_person_1"
+      - "dynamic_person_2"
+    obstacle_config:
+      dynamic_person_1:
+        start_x: -1.5
+        start_y: 0.5
+        start_z: 0.85
+        end_x: 2.2
+        end_y: 0.5
+        end_z: 0.85
+        speed: 0.30
+        pause_duration: 0.8
+      dynamic_person_2:
+        start_x: -4.0
+        start_y: -1.0
+        start_z: 0.85
+        end_x: -4.0
+        end_y: 1.5
+        end_z: 0.85
+        speed: 0.25
+        pause_duration: 0.6
+

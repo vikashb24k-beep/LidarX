@@ -307,12 +307,84 @@ colcon test --event-handlers console_direct+
 | **Zone 2 (Moderate Clutter)** | $0.40\text{ m/s}$ | $0.25 - 0.28\text{ m/s}$ | $35\%$ smoother navigation margin |
 | **Zone 3 (Narrow Passage)** | $0.40\text{ m/s}$ (High Risk) | $0.10 - 0.15\text{ m/s}$ | **Zero collision risk**, optimal clearance |
 | **Zone 4 (Emergency Barrier)** | Sudden hard crash / stop | Controlled deceleration to $0.00\text{ m/s}$ | Prevented structural mechanical impact |
+| **Zone 5 (Warehouse Racks & Workers)** | High collision risk in 1.5m aisles | Adaptive speed + soft-stop for workers | Safe passage through narrow aisles & dynamic clutter |
+| **Zone 6 (Hospital Reception & Lobby)** | Rigid motion near visitors | Smooth crowd regulation & pillar avoidance | Respects hospital comfort and pedestrian safety |
 | **Automatic Resumption** | Requires manual restart | **Automatic resumption upon clearing** | Fully autonomous recovery |
 | **Dynamic Acceleration** | Step jumps ($\infty$ jerk) | Smooth rate-limited ramp ($0.60\text{ m/s}^2$) | Reduced wheel slip and actuator wear |
 
 ---
 
-## 10. Viva & Technical Interview Questions & Answers
+## 10. Scenario Suite (Scenarios 1 through 6)
+
+| Scenario | Environment World | Start Pose | Goal Pose | What It Tests | Expected Behavior |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **1: Open Corridor** | `my.sdf` (Zone 1) | $(-9.0, 0.0, 0^{\circ})$ | $(9.0, 0.0)$ | Maximum cruising speed in free, open space | Cruises at full speed ($0.40\text{ m/s}$), FREE zone, green trajectory trail |
+| **2: Moderate Traffic** | `my.sdf` (Zone 2) | $(-4.0, 0.0, 0^{\circ})$ | $(9.0, 0.0)$ | Speed moderation under moderate obstacle density | Proactively decelerates to $0.25-0.28\text{ m/s}$, MODERATE zone (yellow trail) |
+| **3: Cluttered Passage**| `my.sdf` (Zone 3) | $(0.5, 0.0, 0^{\circ})$ | $(9.0, 0.0)$ | Navigation through dense clutter and narrow passages | Drastically slows to $0.10-0.15\text{ m/s}$, DENSE zone (orange trail), maximum clearance |
+| **4: Critical Barrier** | `my.sdf` (Zone 4) | $(5.0, 0.0, 0^{\circ})$ | $(9.0, 0.0)$ | Deterministic emergency braking and automatic resumption | Controlled stop at $0.45\text{ m}$ boundary (red); automatically resumes when barrier cleared |
+| **5: Warehouse** | `scenario_5_warehouse.sdf` | $(-7.5, 0.0, 0^{\circ})$ | $(8.0, 0.0)$ | Realistic logistics: 4 shelf rows, pallets, cones, forklift, 3 dynamic workers | Navigates 90° corners, slows down inside narrow aisles, soft-stops for crossing workers |
+| **6: Hospital Reception** | `scenario_6_hospital.sdf` | $(-7.5, 0.0, 0^{\circ})$ | $(7.5, 3.5)$ | Healthcare lobby: reception desk, waiting chairs, pillars, wheelchair, 2 dynamic visitors | Decelerates smoothly near desk and chairs, halts if pedestrian crosses, turns into ward corridor |
+
+<p align="center">
+  <img src="docs/figures/adaptive_scenario_5_trajectory.png" width="48%" alt="Scenario 5 Warehouse Trajectory">
+  <img src="docs/figures/adaptive_scenario_5_speed_profile.png" width="48%" alt="Scenario 5 Speed Profile">
+</p>
+
+---
+
+## 11. High-Visibility Speed Displays & Telemetry
+
+The speed state is displayed in multiple concurrent modalities so it is impossible to miss:
+
+1. **RViz Floating Speedometer**: A 3D text marker (`/visualization_speedometer`) floating directly above the robot displaying:
+   `speed 0.18 m/s | limit 0.25 | zone DENSE`
+   Color-coded: **Green** (fast $\ge 0.28\text{ m/s}$), **Yellow** (moderate $\ge 0.18\text{ m/s}$), **Orange** (slow $\ge 0.05\text{ m/s}$), **Red** (stopped $< 0.05\text{ m/s}$).
+2. **Colour-Coded Trajectory Trail**: A persistent `visualization_msgs/Marker` `LINE_STRIP` (`/visualization_trajectory`) where each point is colored by the robot's actual Euclidean speed at that coordinate, complete with an on-screen legend marker (`/visualization_legend`).
+3. **Ground Zone Ring**: A flat cylinder marker (`/visualization_zone_ring`) on the floor beneath the chassis colored by the safety zone:
+   - Green: `FREE`
+   - Yellow: `MODERATE`
+   - Orange: `DENSE`
+   - Red: `EMERGENCY / CRITICAL`
+4. **Live Speed Dashboard GUI** (`speed_dashboard_node.py`):
+   Launch with `dashboard:=true`. Displays:
+   - Horizontal velocity gauge bar ($v_{act}$ vs $v_{max}$)
+   - Real-time rolling plot of $v_{act}$, $v_{cmd}$, and $v_{limit}$ with colored background zone shading
+   - Real-time numerical readout of safety threshold $d_{safe}$, front distance, and clutter density $\rho$
+   - *Headless safety*: Automatically detects headless environments (missing `DISPLAY`) and runs in background logging mode without crashing.
+5. **ANSI Color Terminal HUD**: `odometry_monitor_node` prints a 1-2 Hz terminal telemetry line with matching ANSI escape colors.
+6. **RQt Plot Real-Time Inspection**:
+   ```bash
+   rqt_plot /robot_status/speed /robot_status/commanded_speed /robot_status/speed_limit
+   ```
+
+---
+
+## 12. Quickstart & Demonstration Commands
+
+### Scenario 5: Warehouse Logistics Demo
+```bash
+ros2 launch adaptive_speed_control full_demo.launch.py scenario:=5 autostart:=true
+```
+*(Optional with live dashboard: add `dashboard:=true`)*
+
+### Scenario 6: Hospital Reception Demo
+```bash
+ros2 launch adaptive_speed_control full_demo.launch.py scenario:=6 autostart:=true
+```
+
+### Scenario 1-4 Corridor Demos
+```bash
+ros2 launch adaptive_speed_control full_demo.launch.py scenario:=1 autostart:=true
+```
+
+### Run All Benchmarks & Generate Plots
+```bash
+bash scripts/run_all_scenarios.sh
+```
+
+---
+
+## 13. Viva & Technical Interview Questions & Answers
 
 ### Q1: Why decouple `/cmd_vel_in` and `/cmd_vel` using the Velocity Arbiter Pattern?
 **Answer:** In multi-node robotic systems, if both the autonomous navigator and human teleoperation publish directly to `/cmd_vel`, message interleaving causes erratic actuator oscillation, missed safety stops, and race conditions. By routing all upstream commands through `/cmd_vel_in` and making the adaptive controller the *sole* publisher to `/cmd_vel`, safety constraints are guaranteed regardless of upstream software behavior.
@@ -359,9 +431,31 @@ colcon test --event-handlers console_direct+
 ### Q15: How does the system support fixed-speed baseline benchmarking?
 **Answer:** The controller exposes a boolean parameter `adaptive_enabled`. When set to `false` (e.g. via `baseline_fixed_speed.launch.py`), the controller bypasses distance and clutter attenuation, executing the nominal speed until an emergency stop is reached.
 
+### Q16: How are dynamic moving obstacles (workers/pedestrians) simulated and detected in Gazebo Sim?
+**Answer:** Dynamic obstacles are defined as standard Gazebo SDF models with full `<collision>` geometry (cylinders: radius $0.25\text{ m}$, height $1.7\text{ m}$). `moving_obstacle_node.py` smoothly translates them along configured 3D vectors at speeds of $0.2-0.5\text{ m/s}$ by calling the Gazebo `/world/<world_name>/set_pose` service bridged to ROS 2 via `ros_gz_interfaces/srv/SetEntityPose`. Because they possess genuine collision elements, Gazebo's Ray/GPU LiDAR sensor detects them continuously and accurately down to the millimeter without relying on synthetic mocks.
+
+### Q17: Why are simple geometric primitives (boxes, cylinders, spheres) used instead of high-poly 3D meshes for LiDAR simulation?
+**Answer:** Two fundamental reasons:
+1. **Ray-tracing computational throughput**: Ray casting against analytic primitives (boxes, cylinders) runs in $O(1)$ ray-primitive intersection time, whereas high-poly meshes require bounding volume hierarchy (BVH) ray-triangle intersections that bottleneck simulation real-time factor (RTF). Simple geometry maintains RTF $\ge 1.00$ even in dense 20m x 14m worlds with 10+ obstacles and full LiDAR update rates.
+2. **Offline reproducibility**: Fuel/internet-dependent meshes create fragility and break in air-gapped test runners or headless CI environments. Inherent geometric primitives render offline deterministically.
+
+### Q18: How are the visual speed and zone display colors computed across RViz, the dashboard, and terminal readouts?
+**Answer:** A unified four-tier color scheme maps instantaneous robot state across all visualization pipelines:
+- **Green** ($\ge 0.28\text{ m/s}$, `FREE` zone): safe cruising at or near nominal velocity.
+- **Yellow** ($0.18 \le v < 0.28\text{ m/s}$, `MODERATE` zone): proximity or clutter attenuation active.
+- **Orange** ($0.05 \le v < 0.18\text{ m/s}$, `DENSE` zone): high obstacle density, crawl speed for tight maneuvering.
+- **Red** ($< 0.05\text{ m/s}$, `CRITICAL / EMERGENCY` zone): immediate proximity stop at $d \le d_{safe}$.
+This mapping is computed dynamically by `odometry_monitor_node` for RViz Markers and ANSI terminal output, and by `speed_dashboard_node` for matplotlib graphics.
+
+### Q19: How does the robot distinguish between static clutter and dynamic obstacles, and what is the soft-stop waiting policy?
+**Answer:** The navigator evaluates whether a sudden forward obstruction is temporal or static. When an obstacle blocks the path directly ahead ($d < 0.65\text{ m}$) where no lateral bypass is immediately available, the navigator enters a `WAITING` soft-stop state ($v=0, \omega=0$) for up to `wait_timeout` ($4.0\text{ s}$). If the dynamic obstacle walks past, clearance is restored and the robot resumes `DRIVE` without executing erratic maneuvers. If the blockage persists past the timeout (indicating a stationary barrier), it transitions to `RECOVERY` to back up and navigate around.
+
+### Q20: Why are Gazebo Sim "actors" avoided for LiDAR safety validation, and how does `SetEntityPose` ensure collision detection fidelity?
+**Answer:** In Gazebo Sim (Harmonic / Fortress), `<actor>` entities are designed primarily for visual skeletal animation and frequently lack physical physics/collision engine integration. Consequently, Ray/GPU LiDAR sensors do not cast rays against actor meshes, rendering them completely invisible to the robot's sensor pipeline. Defining them as standard `<model>` links and updating their positions via `/world/<world_name>/set_pose` ensures that both visual and collision bounding volumes are transformed in lockstep, guaranteeing 100% sensor detection fidelity.
+
 ---
 
-## 11. Author & Acknowledgements
+## 14. Author & Acknowledgements
 
 - **Author:** **Vikash** (B.Tech Computer Science & Engineering, IIIT Dharwad)
 - **Original Assignment Template & Robot Model:** Endri Gjinaj (University of Genoa)
@@ -369,6 +463,6 @@ colcon test --event-handlers console_direct+
 
 ---
 
-## 12. License
+## 15. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
