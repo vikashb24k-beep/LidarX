@@ -79,8 +79,8 @@ class SpeedDashboardNode(Node):
             self.fig, (self.ax_gauge, self.ax_plot, self.ax_info) = self.plt.subplots(
                 3, 1, figsize=(8, 7), gridspec_kw={'height_ratios': [1, 2.5, 1]}
             )
-            self.fig.suptitle('Adaptive Speed Control - Live Telemetry Dashboard', fontsize=12, fontweight='bold')
-            self.fig.canvas.manager.set_window_title('Adaptive Speed Dashboard')
+            self.fig.suptitle('LidarX - Live Telemetry Dashboard', fontsize=12, fontweight='bold')
+            self.fig.canvas.manager.set_window_title('LidarX Speed Dashboard')
             self._init_plots()
 
             timer_period = 1.0 / max(1.0, self.update_rate)

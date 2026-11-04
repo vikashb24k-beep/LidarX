@@ -13,4 +13,14 @@
     cmd_timeout: 0.50
     control_rate: 20.0
     adaptive_enabled: true
-
+    # LidarX layered speed governor (all values are SI units).
+    speed_policy: layered_governor
+    governor_v_creep: 0.05
+    governor_comfort_distance: 2.00
+    governor_a_brake: 0.60
+    governor_a_dec: 0.80
+    governor_a_lat: 0.50
+    governor_ttc_min: 1.00
+    governor_goal_distance: 1.00
+    governor_rho_gain: 0.60
+    governor_release_time: 0.40

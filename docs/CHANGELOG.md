@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the **Adaptive Speed Control in Cluttered Environments** project are documented here.
+All notable changes to the **LidarX** project are documented here.
 
 ## [1.1.0] - Complex Worlds, Dynamic Obstacles & Visible Speed Displays (2026-11-03)
 

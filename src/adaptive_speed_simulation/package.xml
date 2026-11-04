@@ -3,7 +3,7 @@
 <package format="3">
   <name>adaptive_speed_simulation</name>
   <version>1.0.0</version>
-  <description>Gazebo Harmonic simulation environments, URDF models, worlds, and bridges for Adaptive Speed Control.</description>
+  <description>LidarX Gazebo Harmonic simulation environments, URDF models, worlds, and bridges.</description>
   <maintainer email="endrigjinaj49@gmail.com">Endri Gjinaj</maintainer>
   <license>MIT</license>
   <author email="vikash@iiitdwd.ac.in">Vikash</author>

@@ -20,7 +20,7 @@ setup(
     maintainer_email='vikashb24k@gmail.com',
     author='Vikash',
     author_email='vikash@iiitdwd.ac.in',
-    description='ROS 2 Adaptive Speed Controller and Autonomous Navigation in Cluttered Environments.',
+    description='LidarX: ROS 2 adaptive speed controller and autonomous navigation in cluttered environments.',
     license='MIT',
     tests_require=['pytest'],
     entry_points={
