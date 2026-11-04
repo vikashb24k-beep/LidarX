@@ -3,7 +3,7 @@
 <package format="3">
   <name>adaptive_speed_control</name>
   <version>1.0.0</version>
-  <description>ROS 2 Adaptive Speed Controller and Autonomous Navigation in Cluttered Environments.</description>
+  <description>LidarX: ROS 2 adaptive speed controller and autonomous navigation in cluttered environments.</description>
   <maintainer email="endrigjinaj49@gmail.com">Endri Gjinaj</maintainer>
   <author email="vikash@iiitdwd.ac.in">Vikash</author>
   <license>MIT</license>

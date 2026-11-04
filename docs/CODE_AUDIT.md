@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-This audit assesses the state of the **Adaptive Speed Control in Cluttered Environments** repository prior to refactoring and final polishing. The repository currently contains a functional prototype of a LiDAR-based adaptive speed controller with basic corridor waypoint following and emergency stopping, but retains legacy assignment package naming (`rt1_assignment2`, `rt1_assignment2_interfaces`, `bme_gazebo_sensors`), embedded submodule remnants, monolithic node implementations, and missing benchmark/metrics tooling.
+This audit assesses the state of the **LidarX** repository prior to refactoring and final polishing. The repository currently contains a functional prototype of a LiDAR-based adaptive speed controller with basic corridor waypoint following and emergency stopping, but retains legacy assignment package naming (`rt1_assignment2`, `rt1_assignment2_interfaces`, `bme_gazebo_sensors`), embedded submodule remnants, monolithic node implementations, and missing benchmark/metrics tooling.
 
 ---
 
@@ -102,4 +102,3 @@ This audit assesses the state of the **Adaptive Speed Control in Cluttered Envir
 - **Phase 5:** Build `metrics_logger_node.py`, benchmark comparison scripts, scenario 4 world updates, and automated evaluation tools with matplotlib plots.
 - **Phase 6:** Implement comprehensive test suite (unit tests for speed policy, sector processing, navigator state machine, and rclpy integration).
 - **Phase 7:** Rewrite documentation (`README.md`, `ARCHITECTURE.md`, `DECISIONS.md`, `CHANGELOG.md`).
-

@@ -2,7 +2,7 @@
 
 ## 1. Architectural Philosophy and Design Principles
 
-The **Adaptive Speed Control in Cluttered Environments** system is engineered around four core safety invariants:
+The **LidarX** system is engineered around four core safety invariants:
 
 1. **Velocity Command Arbiter Pattern:**  
    The `adaptive_speed_controller_node` acts as the single authoritative gatekeeper and exclusive publisher of actuation commands to the physical or simulated robot chassis (`/cmd_vel`). Upstream controllers, planners, and human teleoperators communicate their desired intent exclusively through an intermediary topic (`/cmd_vel_in`). This eliminates race conditions, topic collision, and conflicting actuation commands.
@@ -161,4 +161,3 @@ v_{cmd}(t) = \begin{cases}
 v_{raw}, & \text{if } v_{raw} \le v_{cmd}(t - \Delta t) \text{ (instant braking)}
 \end{cases}
 $$
-

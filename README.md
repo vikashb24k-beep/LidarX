@@ -1,6 +1,7 @@
 <div align="center">
 
-# Adaptive Speed Control in Cluttered Environments
+# LidarX
+### Adaptive Speed Control in Cluttered Environments
 ### ROS 2 Jazzy & Gazebo Harmonic Autonomous Mobile Robot Velocity Regulation
 
 **A dynamic, reactive velocity regulation architecture for autonomous mobile robots in cluttered corridors using 2D LiDAR point clouds, spatial obstacle density estimation, and rate-limited actuation.**
@@ -152,7 +153,7 @@ The continuous 22-meter Gazebo corridor (`my.sdf`) is organized into four distin
 ## 5. Repository Structure
 
 ```
-ros2-lidar-safety-controller/
+LidarX/
 ├── docs/
 │   ├── ARCHITECTURE.md          # Complete architectural specification & graphs
 │   ├── DECISIONS.md             # Autonomous engineering decision log
@@ -221,8 +222,8 @@ ros2-lidar-safety-controller/
 ### Building the Workspace
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/ros2-lidar-safety-controller.git
-cd ros2-lidar-safety-controller
+git clone https://github.com/your-username/LidarX.git
+cd LidarX
 
 # Source ROS 2 environment and build with colcon
 source /opt/ros/jazzy/setup.bash

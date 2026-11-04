@@ -3,7 +3,7 @@
 <package format="3">
   <name>adaptive_speed_interfaces</name>
   <version>1.0.0</version>
-  <description>ROS 2 interface definitions (messages and services) for Adaptive Speed Control.</description>
+  <description>LidarX ROS 2 interface definitions for messages and services.</description>
   <maintainer email="endrigjinaj49@gmail.com">Endri Gjinaj</maintainer>
   <license>MIT</license>
   <author email="vikash@iiitdwd.ac.in">Vikash</author>

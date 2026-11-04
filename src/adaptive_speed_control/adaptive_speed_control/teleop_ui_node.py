@@ -49,7 +49,7 @@ class TeleopUINode(Node):
         self.get_logger().info(
             "\n"
             "===============================================================\n"
-            "   Adaptive Speed Control - User Teleop Interface Ready\n"
+            "   LidarX - User Teleop Interface Ready\n"
             "===============================================================\n"
             "Commands format: <linear_x> <angular_z> <duration_seconds>\n"
             "Examples:\n"
@@ -167,4 +167,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
