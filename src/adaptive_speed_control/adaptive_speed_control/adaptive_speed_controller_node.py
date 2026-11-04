@@ -72,6 +72,14 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
         self.declare_parameter('adaptive_enabled', True)
         self.declare_parameter('enable_corridor_stop', False)
         self.declare_parameter('use_footprint_corridor', True)
+        self.declare_parameter('governor_v_creep', 0.05)
+        self.declare_parameter('governor_comfort_distance', 2.00)
+        self.declare_parameter('governor_a_brake', 0.60)
+        self.declare_parameter('governor_a_dec', 0.80)
+        self.declare_parameter('governor_a_lat', 0.50)
+        self.declare_parameter('governor_ttc_min', 1.00)
+        self.declare_parameter('governor_goal_distance', 1.00)
+        self.declare_parameter('governor_rho_gain', 0.60)
 
         self._load_parameters()
         self._load_footprint_config()
@@ -238,6 +246,14 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
         self.adaptive_enabled = bool(self.get_parameter('adaptive_enabled').value)
         self.enable_corridor_stop = bool(self.get_parameter('enable_corridor_stop').value)
         self.use_footprint_corridor = bool(self.get_parameter('use_footprint_corridor').value)
+        self.governor_v_creep = float(self.get_parameter('governor_v_creep').value)
+        self.governor_comfort_distance = float(self.get_parameter('governor_comfort_distance').value)
+        self.governor_a_brake = float(self.get_parameter('governor_a_brake').value)
+        self.governor_a_dec = float(self.get_parameter('governor_a_dec').value)
+        self.governor_a_lat = float(self.get_parameter('governor_a_lat').value)
+        self.governor_ttc_min = float(self.get_parameter('governor_ttc_min').value)
+        self.governor_goal_distance = float(self.get_parameter('governor_goal_distance').value)
+        self.governor_rho_gain = float(self.get_parameter('governor_rho_gain').value)
 
     def _on_parameters_set(self, params):
         for param in params:
@@ -540,6 +556,14 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
                 a_brake=self.max_acceleration,
                 density_influence=self.density_influence,
                 c_min=self.c_min,
+                scan_latency=self.scan_latency,
+                closing_speed=max(0.0, self.last_cmd_linear),
+                comfort_distance=self.governor_comfort_distance,
+                v_creep=self.governor_v_creep,
+                a_dec=self.governor_a_dec,
+                a_lat=self.governor_a_lat,
+                ttc_min=self.governor_ttc_min,
+                rho_gain=self.governor_rho_gain,
             )
             # Environmental zone classification
             if self.effective_clearance < 1.35 or self.obstacle_density >= 0.30:

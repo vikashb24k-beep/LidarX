@@ -490,6 +490,82 @@ def policy_distance_density_braking(v_req: float, d_clear: float, density: float
     return float(min(v_req, v_stoppable) * c_factor)
 
 
+def _finite(value: float, default: float) -> float:
+    """Return a finite scalar; policy inputs must never propagate NaN."""
+    return float(value) if isinstance(value, (int, float)) and math.isfinite(value) else default
+
+
+def smoothstep01(value: float) -> float:
+    value = max(0.0, min(1.0, _finite(value, 0.0)))
+    return value * value * (3.0 - 2.0 * value)
+
+
+def layered_braking_cap(clearance: float, d0: float, a_brake: float, latency: float) -> float:
+    """Maximum speed that can stop before ``d0`` after measured latency.
+
+    Solves d_c - d0 = v*t_lat + v^2/(2*a) for the non-negative root.
+    """
+    clearance = _finite(clearance, 0.0)
+    available = clearance - max(0.0, _finite(d0, 0.45))
+    if available <= 0.0:
+        return 0.0
+    a = max(1e-3, _finite(a_brake, 0.6))
+    t = max(0.0, _finite(latency, 0.0))
+    return max(0.0, -a * t + math.sqrt((a * t) ** 2 + 2.0 * a * available))
+
+
+def policy_layered_governor(
+    v_req: float, d_clear: float, rho_path: float, lateral_free_width: float,
+    curvature: float, closing_speed: float, distance_to_goal: float,
+    scan_latency: float = 0.0, confidence: float = 1.0,
+    profile_caps: Tuple[Tuple[float, float], ...] = (),
+    d0: float = 0.45, comfort_distance: float = 2.0, a_brake: float = 0.60,
+    a_lat: float = 0.50, ttc_min: float = 1.0, goal_distance: float = 1.0,
+    v_creep: float = 0.05, rho_gain: float = 0.60,
+    robot_width: float = 0.35, lateral_margin: float = 0.08,
+    a_dec: float = 0.80,
+) -> Dict[str, float]:
+    """Pure layered speed governor.
+
+    Hard limits (braking/TTC) are intentionally independent of confidence.
+    ``profile_caps`` is an iterable of ``(distance_along_path, cap)`` pairs.
+    """
+    request = max(0.0, _finite(v_req, 0.0))
+    clearance = _finite(d_clear, 0.0)
+    safety = layered_braking_cap(clearance, d0, a_brake, scan_latency)
+    if not math.isfinite(safety):
+        safety = 0.0
+    # Comfort is soft: it eases from creep to request, and confidence affects
+    # only this term, never the physical stopping envelope.
+    span = max(1e-3, _finite(comfort_distance, 2.0) - d0)
+    comfort_scale = smoothstep01((clearance - d0) / span)
+    confidence = max(0.0, min(1.0, _finite(confidence, 0.0)))
+    comfort = request * (confidence * comfort_scale)
+    width_needed = max(1e-3, _finite(robot_width, .35) + 2.0 * max(0.0, _finite(lateral_margin, .08)))
+    width_scale = smoothstep01((_finite(lateral_free_width, 0.0) - width_needed) / width_needed)
+    lateral_cap = request * width_scale
+    clutter_cap = request * max(0.0, 1.0 - max(0.0, min(1.0, _finite(rho_path, 1.0))) * max(0.0, _finite(rho_gain, .6)))
+    kappa = abs(_finite(curvature, 0.0))
+    turn_cap = request if kappa < 1e-6 else math.sqrt(max(1e-3, _finite(a_lat, .5)) / kappa)
+    closing = max(0.0, _finite(closing_speed, 0.0))
+    ttc_cap = request if closing <= 1e-6 else max(0.0, clearance / max(1e-3, _finite(ttc_min, 1.0)))
+    goal = max(0.0, _finite(distance_to_goal, 0.0))
+    goal_cap = request * smoothstep01(goal / max(1e-3, _finite(goal_distance, 1.0)))
+    profile_cap = request
+    for distance, cap in profile_caps:
+        distance, cap = _finite(distance, float('inf')), max(0.0, _finite(cap, 0.0))
+        if distance >= 0.0:
+            profile_cap = min(profile_cap, math.sqrt(cap * cap + 2.0 * max(1e-3, _finite(a_dec, .8)) * distance))
+    lookahead = min(profile_cap, lateral_cap, clutter_cap, turn_cap, ttc_cap, goal_cap)
+    soft = max(max(0.0, _finite(v_creep, .05)), min(comfort, lookahead))
+    target = min(request, safety, soft)
+    # Never create a creep command through a hard stop.
+    if safety <= 0.0 or ttc_cap <= 0.0:
+        target = 0.0
+    return {'speed': max(0.0, target), 'safety_cap': safety, 'comfort_cap': comfort,
+            'lookahead_cap': lookahead, 'ttc_cap': ttc_cap, 'turn_cap': turn_cap}
+
+
 def evaluate_speed_policy(
     policy_name: str,
     v_req: float,
@@ -500,7 +576,7 @@ def evaluate_speed_policy(
     d_base: float = 0.45,
     a_brake: float = 0.60,
     density_influence: float = 0.60,
-    c_min: float = 0.25,
+    c_min: float = 0.25, **kwargs,
 ) -> float:
     """Selects and computes commanded speed for the requested policy name."""
     name = policy_name.strip().lower()
@@ -516,6 +592,17 @@ def evaluate_speed_policy(
         return policy_distance_density(v_req, d_clear, density, d_margin, d_slow, density_influence, c_min)
     elif name in ('distance_density_braking', 'braking_density'):
         return policy_distance_density_braking(v_req, d_clear, density, d_base, a_brake, density_influence, c_min)
+    elif name == 'layered_governor':
+        return policy_layered_governor(
+            v_req=v_req, d_clear=d_clear, rho_path=kwargs.get('rho_path', density),
+            lateral_free_width=kwargs.get('lateral_free_width', float('inf')),
+            curvature=kwargs.get('curvature', 0.0), closing_speed=kwargs.get('closing_speed', 0.0),
+            distance_to_goal=kwargs.get('distance_to_goal', float('inf')),
+            scan_latency=kwargs.get('scan_latency', 0.0), confidence=kwargs.get('confidence', 1.0),
+            profile_caps=kwargs.get('profile_caps', ()), d0=d_base, a_brake=a_brake,
+            comfort_distance=kwargs.get('comfort_distance', d_slow),
+            v_creep=kwargs.get('v_creep', .05), a_dec=kwargs.get('a_dec', a_brake),
+        )['speed']
     else:
         # Default to distance_density
         return policy_distance_density(v_req, d_clear, density, d_margin, d_slow, density_influence, c_min)

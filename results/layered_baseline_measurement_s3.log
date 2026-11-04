@@ -1,0 +1,210 @@
+[INFO] [launch]: All log files can be found below /home/vhack/.ros/log/2026-11-04-14-06-23-716150-LAPTOP-URN19K8E-23301
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [robot_state_publisher-1]: process started with pid [23305]
+[INFO] [gazebo-2]: process started with pid [23306]
+[INFO] [create-3]: process started with pid [23307]
+[INFO] [parameter_bridge-4]: process started with pid [23309]
+[INFO] [twist_mux-5]: process started with pid [23310]
+[INFO] [scan_fault_injector_node-6]: process started with pid [23311]
+[INFO] [adaptive_speed_controller_node-7]: process started with pid [23353]
+[INFO] [waypoint_navigator_node-8]: process started with pid [23354]
+[INFO] [odometry_monitor_node-9]: process started with pid [23359]
+[INFO] [collision_monitor_node-10]: process started with pid [23360]
+[INFO] [metrics_logger_node-11]: process started with pid [23361]
+[twist_mux-5] [INFO] [1793801184.063837989] [twist_mux]: Topic handler 'topics.navigation' subscribed to topic '/cmd_vel_nav': timeout = 0.500000s , priority = 10.
+[twist_mux-5] [INFO] [1793801184.065953618] [twist_mux]: Topic handler 'topics.teleop' subscribed to topic '/cmd_vel_teleop': timeout = 0.500000s , priority = 100.
+[twist_mux-5] [INFO] [1793801184.066622390] [twist_mux]: Topic handler 'locks.e_stop' subscribed to topic '/e_stop': timeout = None , priority = 255.
+[robot_state_publisher-1] [INFO] [1793801184.068246284] [robot_state_publisher]: Robot initialized
+[create-3] [INFO] [1793801184.097797357] [ros_gz_sim]: Requesting list of world names.
+[parameter_bridge-4] [INFO] [1793801184.134296275] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/clock (gz.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.135063717] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/cmd_vel (gz.msgs.Twist) -> /cmd_vel (geometry_msgs/msg/Twist)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.136590976] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/cmd_vel (geometry_msgs/msg/Twist) -> /cmd_vel (gz.msgs.Twist)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.137326094] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/odom (gz.msgs.Odometry) -> /odom (nav_msgs/msg/Odometry)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.138850982] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/odom (nav_msgs/msg/Odometry) -> /odom (gz.msgs.Odometry)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.139538453] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/joint_states (gz.msgs.Model) -> /joint_states (sensor_msgs/msg/JointState)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.141180279] [ros_gz_bridge]: Creating ROS->GZ Bridge: [/joint_states (sensor_msgs/msg/JointState) -> /joint_states (gz.msgs.Model)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.141980715] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/scan_raw (gz.msgs.LaserScan) -> /scan_raw (sensor_msgs/msg/LaserScan)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.142700944] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/contacts (gz.msgs.Contacts) -> /contacts (ros_gz_interfaces/msg/Contacts)] (Lazy 0)
+[parameter_bridge-4] [INFO] [1793801184.145116110] [ros_gz_bridge]: Creating ROS->GZ service bridge [/world/empty/set_pose (ros_gz_interfaces/srv/SetEntityPose -> /)]
+[scan_fault_injector_node-6] [INFO] [1793801184.477405729] [scan_fault_injector_node]: Scan Fault Injector initialized | Profile: none | Noise σ: 0.000m | Dropout: 0.0% | Delay: 0.0ms | DropScan: 0.0%
+[metrics_logger_node-11] [INFO] [1793801184.485405829] [metrics_logger_node]: Metrics Logger initialized. Logging metrics to: /home/vhack/vikash/ros2-lidar-safety-controller/results/layered_baseline_measurement_s3.csv
+[waypoint_navigator_node-8] [INFO] [1793801184.520476111] [waypoint_navigator_node]: 
+[waypoint_navigator_node-8] ===============================================================
+[waypoint_navigator_node-8]    Start-to-End Autonomous Waypoint Navigator Initialized
+[waypoint_navigator_node-8] ===============================================================
+[waypoint_navigator_node-8]   Route               : (-9.0, 0.0) -> (9.0, 0.0)
+[waypoint_navigator_node-8]   Waypoints Count     : 4
+[waypoint_navigator_node-8]   Nominal Speed       : 0.40 m/s
+[waypoint_navigator_node-8]   Publishing Target   : /cmd_vel_in
+[waypoint_navigator_node-8]   Feedback Source     : /odom, /obstacle_info
+[waypoint_navigator_node-8]   Initial State       : DRIVE
+[waypoint_navigator_node-8] ===============================================================
+[collision_monitor_node-10] [INFO] [1793801184.535584904] [collision_monitor_node]: Collision and Smoothness Monitor Node initialized.
+[adaptive_speed_controller_node-7] [INFO] [1793801184.563912957] [adaptive_speed_controller_node]: [LIFECYCLE] Configuring Adaptive Speed Controller Node...
+[adaptive_speed_controller_node-7] [INFO] [1793801184.564242075] [adaptive_speed_controller_node]: [LIFECYCLE] Activating Adaptive Speed Controller Node...
+[odometry_monitor_node-9] [INFO] [1793801184.587235876] [odometry_monitor_node]: Odometry Monitor Node initialized with high-visibility speed displays.
+[create-3] [INFO] [1793801184.616142543] [ros_gz_sim]: Waiting messages on topic [robot_description].
+[create-3] [INFO] [1793801184.627600068] [ros_gz_sim]: Entity creation successful.
+[INFO] [create-3]: process has finished cleanly [pid 23307]
+[parameter_bridge-4] [INFO] [1793801186.664788286] [ros_gz_bridge]: Passing message from ROS geometry_msgs/msg/Twist to Gazebo gz.msgs.Twist (showing msg only once per type)
+[adaptive_speed_controller_node-7] [INFO] [1793801186.665174848] [adaptive_speed_controller_node]: [STATUS] IDLE | Waiting for commands on /cmd_vel_in...
+[waypoint_navigator_node-8] [INFO] [1793801186.714534595] [waypoint_navigator_node]: [NAV] Advanced to waypoint 1: (-1.0, 0.0)
+[waypoint_navigator_node-8] [INFO] [1793801186.715210295] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 2/4 | Progress:  50.0% | Pos: ( 0.00,  0.00) | Front: 0.66m
+[adaptive_speed_controller_node-7] [INFO] [1793801186.764956523] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 1.44m | Margin: 0.45m | Density: 0.40 | Speed: 0.02 m/s
+[waypoint_navigator_node-8] [INFO] [1793801186.814608052] [waypoint_navigator_node]: [NAV] Advanced to waypoint 2: (4.0, 0.0)
+[odometry_monitor_node-9] [INFO] [1793801187.282427132] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 0.06, -0.00) | [93mV_act: 0.26 m/s[0m | V_cmd: 0.29 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 8.94m | Trav: 0.06m | ETA: 53.3s
+[adaptive_speed_controller_node-7] [INFO] [1793801187.564923331] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: infm | Margin: 0.58m | Density: 0.27 | Speed: 0.33 m/s
+[odometry_monitor_node-9] [INFO] [1793801187.949339114] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 0.28, -0.00) | [92mV_act: 0.36 m/s[0m | V_cmd: 0.36 m/s | [93mZone: MODERATE_TRAFFIC[0m | Dist: 8.72m | Trav: 0.28m | ETA: 25.0s
+[adaptive_speed_controller_node-7] [INFO] [1793801188.064868167] [adaptive_speed_controller_node]: [STATUS] EMPTY_CORRIDOR     | Policy: distance_density | Clearance: infm | Margin: 0.61m | Density: 0.07 | Speed: 0.38 m/s
+[waypoint_navigator_node-8] [INFO] [1793801188.215153564] [waypoint_navigator_node]: [NAV] State: AVOID_OBSTACLE | WP 3/4 | Progress:  52.1% | Pos: ( 0.39,  0.00) | Front: 0.63m
+[adaptive_speed_controller_node-7] [INFO] [1793801188.464966215] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: infm | Margin: 0.63m | Density: 0.15 | Speed: 0.36 m/s
+[odometry_monitor_node-9] [INFO] [1793801188.615288944] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 0.53,  0.00) | [92mV_act: 0.35 m/s[0m | V_cmd: 0.34 m/s | [93mZone: MODERATE_TRAFFIC[0m | Dist: 8.47m | Trav: 0.53m | ETA: 22.0s
+[adaptive_speed_controller_node-7] [INFO] [1793801188.664925933] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: infm | Margin: 0.59m | Density: 0.31 | Speed: 0.32 m/s
+[odometry_monitor_node-9] [INFO] [1793801189.282567471] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 0.75, -0.02) | [92mV_act: 0.31 m/s[0m | V_cmd: 0.31 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 8.25m | Trav: 0.75m | ETA: 26.6s
+[adaptive_speed_controller_node-7] [INFO] [1793801189.714863995] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: infm | Margin: 0.56m | Density: 0.41 | Speed: 0.30 m/s
+[waypoint_navigator_node-8] [INFO] [1793801189.815085033] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 3/4 | Progress:  55.1% | Pos: ( 0.91, -0.02) | Front: 0.81m
+[odometry_monitor_node-9] [INFO] [1793801189.949438723] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 0.95, -0.02) | [92mV_act: 0.30 m/s[0m | V_cmd: 0.30 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 8.05m | Trav: 0.95m | ETA: 26.9s
+[odometry_monitor_node-9] [INFO] [1793801190.615345477] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 1.15, -0.02) | [92mV_act: 0.32 m/s[0m | V_cmd: 0.32 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 7.85m | Trav: 1.15m | ETA: 25.5s
+[adaptive_speed_controller_node-7] [INFO] [1793801190.714941964] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: infm | Margin: 0.58m | Density: 0.30 | Speed: 0.33 m/s
+[adaptive_speed_controller_node-7] [INFO] [1793801190.765394865] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: infm | Margin: 0.58m | Density: 0.27 | Speed: 0.33 m/s
+[adaptive_speed_controller_node-7] [INFO] [1793801191.265207942] [adaptive_speed_controller_node]: [STATUS] EMPTY_CORRIDOR     | Policy: distance_density | Clearance: infm | Margin: 0.61m | Density: 0.06 | Speed: 0.39 m/s
+[odometry_monitor_node-9] [INFO] [1793801191.282248153] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 1.38, -0.02) | [92mV_act: 0.38 m/s[0m | V_cmd: 0.39 m/s | [91mZone: EMPTY_CORRIDOR[0m | Dist: 7.62m | Trav: 1.38m | ETA: 21.0s
+[waypoint_navigator_node-8] [INFO] [1793801191.414899099] [waypoint_navigator_node]: [NAV] State: AVOID_OBSTACLE | WP 3/4 | Progress:  58.0% | Pos: ( 1.44, -0.02) | Front: 0.65m
+[adaptive_speed_controller_node-7] [INFO] [1793801191.766749122] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: infm | Margin: 0.62m | Density: 0.12 | Speed: 0.37 m/s
+[odometry_monitor_node-9] [INFO] [1793801191.950816583] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 1.63, -0.03) | [92mV_act: 0.35 m/s[0m | V_cmd: 0.35 m/s | [93mZone: MODERATE_TRAFFIC[0m | Dist: 7.37m | Trav: 1.63m | ETA: 19.4s
+[adaptive_speed_controller_node-7] [INFO] [1793801192.066441859] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: infm | Margin: 0.58m | Density: 0.34 | Speed: 0.32 m/s
+[odometry_monitor_node-9] [INFO] [1793801192.616689794] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 1.84, -0.04) | [93mV_act: 0.27 m/s[0m | V_cmd: 0.27 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 7.16m | Trav: 1.84m | ETA: 25.4s
+[waypoint_navigator_node-8] [INFO] [1793801192.916391691] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 3/4 | Progress:  60.7% | Pos: ( 1.92, -0.03) | Front: 0.85m
+[adaptive_speed_controller_node-7] [INFO] [1793801193.116914238] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: infm | Margin: 0.53m | Density: 0.62 | Speed: 0.25 m/s
+[odometry_monitor_node-9] [INFO] [1793801193.283715785] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 2.01, -0.03) | [93mV_act: 0.25 m/s[0m | V_cmd: 0.25 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 6.99m | Trav: 2.01m | ETA: 27.9s
+[odometry_monitor_node-9] [INFO] [1793801193.951311855] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 2.18, -0.03) | [93mV_act: 0.28 m/s[0m | V_cmd: 0.28 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 6.82m | Trav: 2.18m | ETA: 25.4s
+[adaptive_speed_controller_node-7] [INFO] [1793801194.166344136] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: infm | Margin: 0.55m | Density: 0.44 | Speed: 0.30 m/s
+[waypoint_navigator_node-8] [INFO] [1793801194.416474674] [waypoint_navigator_node]: [NAV] State: AVOID_OBSTACLE | WP 3/4 | Progress:  62.9% | Pos: ( 2.32, -0.02) | Front: 0.63m
+[odometry_monitor_node-9] [INFO] [1793801194.616714209] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 2.38, -0.02) | [92mV_act: 0.33 m/s[0m | V_cmd: 0.33 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 6.62m | Trav: 2.39m | ETA: 21.2s
+[adaptive_speed_controller_node-7] [INFO] [1793801194.666984647] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: infm | Margin: 0.58m | Density: 0.26 | Speed: 0.34 m/s
+[adaptive_speed_controller_node-7] [INFO] [1793801195.066387571] [adaptive_speed_controller_node]: [STATUS] EMPTY_CORRIDOR     | Policy: distance_density | Clearance: infm | Margin: 0.61m | Density: 0.04 | Speed: 0.39 m/s
+[odometry_monitor_node-9] [INFO] [1793801195.283843591] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 2.62, -0.03) | [92mV_act: 0.40 m/s[0m | V_cmd: 0.40 m/s | [91mZone: EMPTY_CORRIDOR[0m | Dist: 6.38m | Trav: 2.62m | ETA: 16.6s
+[adaptive_speed_controller_node-7] [INFO] [1793801195.466749655] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: infm | Margin: 0.62m | Density: 0.28 | Speed: 0.33 m/s
+[adaptive_speed_controller_node-7] [INFO] [1793801195.566517135] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: infm | Margin: 0.58m | Density: 0.37 | Speed: 0.31 m/s
+[waypoint_navigator_node-8] [INFO] [1793801195.917071965] [waypoint_navigator_node]: [NAV] State: AVOID_OBSTACLE | WP 3/4 | Progress:  65.8% | Pos: ( 2.84, -0.05) | Front: 1.01m
+[odometry_monitor_node-9] [INFO] [1793801195.951171136] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 2.84, -0.05) | [92mV_act: 0.29 m/s[0m | V_cmd: 0.29 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 6.16m | Trav: 2.85m | ETA: 20.8s
+[adaptive_speed_controller_node-7] [INFO] [1793801196.566611429] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 2.73m | Margin: 0.54m | Density: 0.53 | Speed: 0.27 m/s
+[odometry_monitor_node-9] [INFO] [1793801196.616832165] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 3.03, -0.06) | [93mV_act: 0.27 m/s[0m | V_cmd: 0.27 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 5.97m | Trav: 3.04m | ETA: 21.8s
+[odometry_monitor_node-9] [INFO] [1793801197.283739740] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 3.21, -0.05) | [93mV_act: 0.27 m/s[0m | V_cmd: 0.27 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 5.79m | Trav: 3.21m | ETA: 21.9s
+[waypoint_navigator_node-8] [INFO] [1793801197.516477444] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 3/4 | Progress:  68.2% | Pos: ( 3.27, -0.04) | Front: 0.69m
+[adaptive_speed_controller_node-7] [INFO] [1793801197.616303518] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 2.46m | Margin: 0.55m | Density: 0.51 | Speed: 0.28 m/s
+[waypoint_navigator_node-8] [INFO] [1793801197.816083708] [waypoint_navigator_node]: [NAV] Advanced to waypoint 3: (9.0, 0.0)
+[odometry_monitor_node-9] [INFO] [1793801197.951058624] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 3.40, -0.04) | [92mV_act: 0.30 m/s[0m | V_cmd: 0.30 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 5.60m | Trav: 3.40m | ETA: 19.4s
+[adaptive_speed_controller_node-7] [INFO] [1793801198.166440917] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: 2.28m | Margin: 0.57m | Density: 0.27 | Speed: 0.33 m/s
+[odometry_monitor_node-9] [INFO] [1793801198.616828629] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 3.62, -0.03) | [92mV_act: 0.39 m/s[0m | V_cmd: 0.39 m/s | [93mZone: MODERATE_TRAFFIC[0m | Dist: 5.38m | Trav: 3.62m | ETA: 14.9s
+[waypoint_navigator_node-8] [INFO] [1793801199.016435185] [waypoint_navigator_node]: [NAV] State: AVOID_OBSTACLE | WP 4/4 | Progress:  71.0% | Pos: ( 3.78, -0.05) | Front: 1.95m
+[adaptive_speed_controller_node-7] [INFO] [1793801199.166872894] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: 1.91m | Margin: 0.62m | Density: 0.00 | Speed: 0.37 m/s
+[odometry_monitor_node-9] [INFO] [1793801199.283827875] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 3.88, -0.05) | [92mV_act: 0.37 m/s[0m | V_cmd: 0.36 m/s | [93mZone: MODERATE_TRAFFIC[0m | Dist: 5.12m | Trav: 3.89m | ETA: 13.2s
+[odometry_monitor_node-9] [INFO] [1793801199.950820848] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.11, -0.06) | [92mV_act: 0.31 m/s[0m | V_cmd: 0.31 m/s | [93mZone: MODERATE_TRAFFIC[0m | Dist: 4.89m | Trav: 4.11m | ETA: 15.4s
+[adaptive_speed_controller_node-7] [INFO] [1793801200.216455951] [adaptive_speed_controller_node]: [STATUS] MODERATE_TRAFFIC   | Policy: distance_density | Clearance: 1.58m | Margin: 0.55m | Density: 0.00 | Speed: 0.28 m/s
+[waypoint_navigator_node-8] [INFO] [1793801200.516481140] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  73.7% | Pos: ( 4.26, -0.06) | Front: 1.54m
+[odometry_monitor_node-9] [INFO] [1793801200.616853910] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.29, -0.06) | [93mV_act: 0.26 m/s[0m | V_cmd: 0.26 m/s | [93mZone: MODERATE_TRAFFIC[0m | Dist: 4.71m | Trav: 4.29m | ETA: 17.7s
+[adaptive_speed_controller_node-7] [INFO] [1793801201.067062255] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 1.34m | Margin: 0.52m | Density: 0.00 | Speed: 0.22 m/s
+[odometry_monitor_node-9] [INFO] [1793801201.283793418] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.45, -0.06) | [93mV_act: 0.22 m/s[0m | V_cmd: 0.21 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.55m | Trav: 4.45m | ETA: 20.3s
+[odometry_monitor_node-9] [INFO] [1793801201.951991871] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.58, -0.06) | [93mV_act: 0.18 m/s[0m | V_cmd: 0.18 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.43m | Trav: 4.58m | ETA: 23.4s
+[waypoint_navigator_node-8] [INFO] [1793801202.017511239] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  75.5% | Pos: ( 4.59, -0.06) | Front: 1.21m
+[adaptive_speed_controller_node-7] [INFO] [1793801202.067567029] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 1.15m | Margin: 0.50m | Density: 0.00 | Speed: 0.17 m/s
+[odometry_monitor_node-9] [INFO] [1793801202.617847916] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.69, -0.05) | [38;5;208mV_act: 0.14 m/s[0m | V_cmd: 0.14 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.31m | Trav: 4.69m | ETA: 28.2s
+[adaptive_speed_controller_node-7] [INFO] [1793801203.117702474] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 1.00m | Margin: 0.48m | Density: 0.22 | Speed: 0.12 m/s
+[odometry_monitor_node-9] [INFO] [1793801203.285018579] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.77, -0.05) | [38;5;208mV_act: 0.11 m/s[0m | V_cmd: 0.11 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.23m | Trav: 4.78m | ETA: 36.0s
+[waypoint_navigator_node-8] [INFO] [1793801203.517533085] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  76.6% | Pos: ( 4.80, -0.05) | Front: 1.00m
+[odometry_monitor_node-9] [INFO] [1793801203.952165288] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.84, -0.05) | [38;5;208mV_act: 0.09 m/s[0m | V_cmd: 0.09 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.16m | Trav: 4.84m | ETA: 43.1s
+[adaptive_speed_controller_node-7] [INFO] [1793801204.117689578] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.88m | Margin: 0.47m | Density: 0.30 | Speed: 0.09 m/s
+[odometry_monitor_node-9] [INFO] [1793801204.618099611] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.90, -0.05) | [38;5;208mV_act: 0.08 m/s[0m | V_cmd: 0.08 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.10m | Trav: 4.90m | ETA: 49.1s
+[waypoint_navigator_node-8] [INFO] [1793801205.018276511] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  77.4% | Pos: ( 4.93, -0.05) | Front: 0.85m
+[adaptive_speed_controller_node-7] [INFO] [1793801205.167567435] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.80m | Margin: 0.46m | Density: 0.33 | Speed: 0.07 m/s
+[odometry_monitor_node-9] [INFO] [1793801205.284898848] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.95, -0.05) | [38;5;208mV_act: 0.07 m/s[0m | V_cmd: 0.07 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.05m | Trav: 4.95m | ETA: 57.7s
+[odometry_monitor_node-9] [INFO] [1793801205.952035513] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.99, -0.05) | [38;5;208mV_act: 0.06 m/s[0m | V_cmd: 0.06 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.01m | Trav: 4.99m | ETA: 63.9s
+[adaptive_speed_controller_node-7] [INFO] [1793801206.167572689] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.74m | Margin: 0.46m | Density: 0.34 | Speed: 0.06 m/s
+[waypoint_navigator_node-8] [INFO] [1793801206.617764301] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  77.9% | Pos: ( 5.03, -0.05) | Front: 0.76m
+[odometry_monitor_node-9] [INFO] [1793801206.619189321] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.03, -0.05) | [38;5;208mV_act: 0.05 m/s[0m | V_cmd: 0.05 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.97m | Trav: 5.03m | ETA: 74.2s
+[adaptive_speed_controller_node-7] [INFO] [1793801207.217813657] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.68m | Margin: 0.46m | Density: 0.35 | Speed: 0.05 m/s
+[odometry_monitor_node-9] [INFO] [1793801207.285004351] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.06, -0.05) | [91mV_act: 0.05 m/s[0m | V_cmd: 0.04 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.94m | Trav: 5.06m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801207.952050524] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.09, -0.05) | [91mV_act: 0.04 m/s[0m | V_cmd: 0.04 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.92m | Trav: 5.09m | ETA: INF
+[waypoint_navigator_node-8] [INFO] [1793801208.117524581] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  78.3% | Pos: ( 5.09, -0.05) | Front: 0.69m
+[adaptive_speed_controller_node-7] [INFO] [1793801208.267619412] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.63m | Margin: 0.46m | Density: 0.36 | Speed: 0.04 m/s
+[odometry_monitor_node-9] [INFO] [1793801208.617908362] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.11, -0.05) | [91mV_act: 0.03 m/s[0m | V_cmd: 0.03 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.89m | Trav: 5.12m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801209.284933958] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.13, -0.05) | [91mV_act: 0.03 m/s[0m | V_cmd: 0.03 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.87m | Trav: 5.14m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801209.317585390] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.60m | Margin: 0.45m | Density: 0.37 | Speed: 0.03 m/s
+[waypoint_navigator_node-8] [INFO] [1793801209.717505967] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  78.6% | Pos: ( 5.14, -0.05) | Front: 0.64m
+[odometry_monitor_node-9] [INFO] [1793801209.952146877] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.15, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.85m | Trav: 5.15m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801210.317590981] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.58m | Margin: 0.45m | Density: 0.37 | Speed: 0.02 m/s
+[odometry_monitor_node-9] [INFO] [1793801210.617904615] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.16, -0.05) | [91mV_act: 0.01 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.84m | Trav: 5.17m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801211.284963815] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.16, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.84m | Trav: 5.17m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801211.952211023] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.16, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.84m | Trav: 5.17m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801212.617959600] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.16, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.84m | Trav: 5.17m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801213.285108111] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.16, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.84m | Trav: 5.17m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801213.952252813] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.16, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.84m | Trav: 5.17m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801214.617905804] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.16, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.84m | Trav: 5.17m | ETA: INF
+[waypoint_navigator_node-8] [WARN] [1793801214.917819263] [waypoint_navigator_node]: [WAIT TIMEOUT] Blocked for 4.1s. Initiating RECOVERY.
+[waypoint_navigator_node-8] [INFO] [1793801215.017540346] [waypoint_navigator_node]: [NAV] State: RECOVERY       | WP 4/4 | Progress:  78.7% | Pos: ( 5.16, -0.05) | Front: 0.62m
+[odometry_monitor_node-9] [INFO] [1793801215.284944983] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.14, -0.05) | [38;5;208mV_act: 0.15 m/s[0m | V_cmd: -0.15 m/s | [91mZone: REVERSE     [0m | Dist: 3.86m | Trav: 5.19m | ETA: 59.1s
+[odometry_monitor_node-9] [INFO] [1793801215.951951785] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.05, -0.05) | [38;5;208mV_act: 0.15 m/s[0m | V_cmd: -0.15 m/s | [91mZone: REVERSE     [0m | Dist: 3.95m | Trav: 5.29m | ETA: 26.4s
+[waypoint_navigator_node-8] [INFO] [1793801216.518572513] [waypoint_navigator_node]: [NAV] State: RECOVERY       | WP 4/4 | Progress:  77.6% | Pos: ( 4.96, -0.05) | Front: 0.81m
+[odometry_monitor_node-9] [INFO] [1793801216.619946394] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.95, -0.05) | [91mV_act: 0.02 m/s[0m | V_cmd: 0.00 m/s | [91mZone: ROTATING    [0m | Dist: 4.05m | Trav: 5.38m | ETA: 34.5s
+[odometry_monitor_node-9] [INFO] [1793801217.286060307] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.95, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: ROTATING    [0m | Dist: 4.05m | Trav: 5.38m | ETA: INF
+[waypoint_navigator_node-8] [INFO] [1793801217.918550545] [waypoint_navigator_node]: [RECOVERY] Recovery complete. Resuming DRIVE.
+[odometry_monitor_node-9] [INFO] [1793801217.953304059] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.95, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: ROTATING    [0m | Dist: 4.05m | Trav: 5.38m | ETA: INF
+[waypoint_navigator_node-8] [INFO] [1793801218.018642670] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  77.5% | Pos: ( 4.95, -0.05) | Front: 0.82m
+[adaptive_speed_controller_node-7] [INFO] [1793801218.068786432] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.69m | Margin: 0.45m | Density: 0.32 | Speed: 0.01 m/s
+[odometry_monitor_node-9] [INFO] [1793801218.619120042] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.95, -0.05) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.05m | Trav: 5.38m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801219.118805067] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.75m | Margin: 0.46m | Density: 0.33 | Speed: 0.06 m/s
+[odometry_monitor_node-9] [INFO] [1793801219.286539223] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.98, -0.06) | [38;5;208mV_act: 0.06 m/s[0m | V_cmd: 0.06 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.02m | Trav: 5.41m | ETA: 70.8s
+[waypoint_navigator_node-8] [INFO] [1793801219.518692971] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  77.7% | Pos: ( 4.99, -0.06) | Front: 0.79m
+[odometry_monitor_node-9] [INFO] [1793801219.953280822] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.02, -0.06) | [38;5;208mV_act: 0.05 m/s[0m | V_cmd: 0.05 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.98m | Trav: 5.45m | ETA: 72.4s
+[adaptive_speed_controller_node-7] [INFO] [1793801220.119013079] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.71m | Margin: 0.46m | Density: 0.34 | Speed: 0.05 m/s
+[odometry_monitor_node-9] [INFO] [1793801220.619393070] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.05, -0.06) | [91mV_act: 0.05 m/s[0m | V_cmd: 0.05 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.95m | Trav: 5.48m | ETA: INF
+[waypoint_navigator_node-8] [INFO] [1793801221.018683039] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  78.2% | Pos: ( 5.07, -0.06) | Front: 0.71m
+[adaptive_speed_controller_node-7] [INFO] [1793801221.118922173] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.65m | Margin: 0.46m | Density: 0.35 | Speed: 0.04 m/s
+[odometry_monitor_node-9] [INFO] [1793801221.286231503] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.08, -0.06) | [91mV_act: 0.04 m/s[0m | V_cmd: 0.04 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.92m | Trav: 5.51m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801221.953684594] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.10, -0.06) | [91mV_act: 0.03 m/s[0m | V_cmd: 0.03 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.90m | Trav: 5.53m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801222.169385444] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.62m | Margin: 0.45m | Density: 0.37 | Speed: 0.03 m/s
+[waypoint_navigator_node-8] [INFO] [1793801222.618796554] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  78.5% | Pos: ( 5.13, -0.06) | Front: 0.65m
+[odometry_monitor_node-9] [INFO] [1793801222.619042936] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.13, -0.06) | [91mV_act: 0.03 m/s[0m | V_cmd: 0.03 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.87m | Trav: 5.55m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801223.218717253] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.59m | Margin: 0.45m | Density: 0.37 | Speed: 0.03 m/s
+[odometry_monitor_node-9] [INFO] [1793801223.286178570] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.15, -0.06) | [91mV_act: 0.03 m/s[0m | V_cmd: 0.02 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.86m | Trav: 5.57m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801223.953063625] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.16, -0.06) | [91mV_act: 0.02 m/s[0m | V_cmd: 0.02 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.84m | Trav: 5.59m | ETA: INF
+[waypoint_navigator_node-8] [INFO] [1793801224.218723657] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  78.7% | Pos: ( 5.17, -0.06) | Front: 0.62m
+[adaptive_speed_controller_node-7] [INFO] [1793801224.218944980] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.57m | Margin: 0.45m | Density: 0.38 | Speed: 0.02 m/s
+[odometry_monitor_node-9] [INFO] [1793801224.620449951] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.18, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.82m | Trav: 5.60m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801225.286012421] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.18, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.82m | Trav: 5.60m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801225.954609265] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.18, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.82m | Trav: 5.60m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801226.619150643] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.18, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.82m | Trav: 5.60m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801227.286128085] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.18, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.82m | Trav: 5.60m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801227.953294811] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.18, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.82m | Trav: 5.60m | ETA: INF
+[waypoint_navigator_node-8] [WARN] [1793801228.518709637] [waypoint_navigator_node]: [WAIT TIMEOUT] Blocked for 4.0s. Initiating RECOVERY.
+[waypoint_navigator_node-8] [INFO] [1793801228.618967667] [waypoint_navigator_node]: [NAV] State: RECOVERY       | WP 4/4 | Progress:  78.8% | Pos: ( 5.18, -0.06) | Front: 0.60m
+[odometry_monitor_node-9] [INFO] [1793801228.619124143] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.18, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: STOPPED     [0m | Dist: 3.82m | Trav: 5.60m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801229.286590349] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.10, -0.06) | [38;5;208mV_act: 0.15 m/s[0m | V_cmd: -0.15 m/s | [91mZone: REVERSE     [0m | Dist: 3.90m | Trav: 5.68m | ETA: 26.0s
+[odometry_monitor_node-9] [INFO] [1793801229.953739749] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.00, -0.06) | [38;5;208mV_act: 0.15 m/s[0m | V_cmd: -0.15 m/s | [91mZone: REVERSE     [0m | Dist: 4.00m | Trav: 5.78m | ETA: 26.7s
+[waypoint_navigator_node-8] [INFO] [1793801230.119215593] [waypoint_navigator_node]: [NAV] State: RECOVERY       | WP 4/4 | Progress:  77.6% | Pos: ( 4.97, -0.06) | Front: 0.79m
+[odometry_monitor_node-9] [INFO] [1793801230.621379012] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.95, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: ROTATING    [0m | Dist: 4.05m | Trav: 5.83m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801231.290197593] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.95, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: ROTATING    [0m | Dist: 4.05m | Trav: 5.83m | ETA: INF
+[waypoint_navigator_node-8] [INFO] [1793801231.522974037] [waypoint_navigator_node]: [RECOVERY] Recovery complete. Resuming DRIVE.
+[waypoint_navigator_node-8] [INFO] [1793801231.623064088] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  77.5% | Pos: ( 4.95, -0.06) | Front: 0.82m
+[adaptive_speed_controller_node-7] [INFO] [1793801231.672902043] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.67m | Margin: 0.45m | Density: 0.32 | Speed: 0.00 m/s
+[odometry_monitor_node-9] [INFO] [1793801231.957365607] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.95, -0.06) | [91mV_act: 0.00 m/s[0m | V_cmd: 0.00 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.05m | Trav: 5.83m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801232.623410811] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 4.96, -0.06) | [38;5;208mV_act: 0.06 m/s[0m | V_cmd: 0.06 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.04m | Trav: 5.84m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801232.723250721] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.75m | Margin: 0.46m | Density: 0.34 | Speed: 0.06 m/s
+[waypoint_navigator_node-8] [INFO] [1793801233.223406976] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  77.8% | Pos: ( 5.00, -0.07) | Front: 0.79m
+[odometry_monitor_node-9] [INFO] [1793801233.290191208] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.00, -0.07) | [38;5;208mV_act: 0.06 m/s[0m | V_cmd: 0.05 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 4.00m | Trav: 5.88m | ETA: 69.4s
+[adaptive_speed_controller_node-7] [INFO] [1793801233.772884232] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.69m | Margin: 0.46m | Density: 0.35 | Speed: 0.05 m/s
+[odometry_monitor_node-9] [INFO] [1793801233.957386670] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.04, -0.07) | [91mV_act: 0.05 m/s[0m | V_cmd: 0.05 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.96m | Trav: 5.91m | ETA: INF
+[odometry_monitor_node-9] [INFO] [1793801234.623170712] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.07, -0.07) | [91mV_act: 0.04 m/s[0m | V_cmd: 0.04 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.93m | Trav: 5.94m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801234.822731418] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.65m | Margin: 0.46m | Density: 0.36 | Speed: 0.04 m/s
+[waypoint_navigator_node-8] [INFO] [1793801234.822744562] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  78.2% | Pos: ( 5.08, -0.07) | Front: 0.71m
+[odometry_monitor_node-9] [INFO] [1793801235.290158563] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.09, -0.07) | [91mV_act: 0.04 m/s[0m | V_cmd: 0.04 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.91m | Trav: 5.97m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801235.822835728] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.61m | Margin: 0.45m | Density: 0.37 | Speed: 0.03 m/s
+[odometry_monitor_node-9] [INFO] [1793801235.957319094] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.12, -0.07) | [91mV_act: 0.03 m/s[0m | V_cmd: 0.03 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.89m | Trav: 5.99m | ETA: INF
+[waypoint_navigator_node-8] [INFO] [1793801236.423280169] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  78.5% | Pos: ( 5.13, -0.07) | Front: 0.65m
+[odometry_monitor_node-9] [INFO] [1793801236.623298806] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.14, -0.07) | [91mV_act: 0.03 m/s[0m | V_cmd: 0.03 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.86m | Trav: 6.01m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801236.823372873] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.59m | Margin: 0.45m | Density: 0.37 | Speed: 0.03 m/s
+[odometry_monitor_node-9] [INFO] [1793801237.290234377] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.15, -0.06) | [91mV_act: 0.02 m/s[0m | V_cmd: 0.02 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.85m | Trav: 6.03m | ETA: INF
+[adaptive_speed_controller_node-7] [INFO] [1793801237.872801835] [adaptive_speed_controller_node]: [STATUS] CLUTTERED_CORRIDOR | Policy: distance_density | Clearance: 0.55m | Margin: 0.45m | Density: 0.38 | Speed: 0.02 m/s
+[odometry_monitor_node-9] [INFO] [1793801237.957461453] [odometry_monitor_node]: [1m[HUD][0m Pos: ( 5.17, -0.06) | [91mV_act: 0.02 m/s[0m | V_cmd: 0.02 m/s | [91mZone: CLUTTERED_CORRIDOR[0m | Dist: 3.83m | Trav: 6.05m | ETA: INF
+[waypoint_navigator_node-8] [INFO] [1793801238.023375682] [waypoint_navigator_node]: [NAV] State: DRIVE          | WP 4/4 | Progress:  78.7% | Pos: ( 5.17, -0.06) | Front: 0.61m
