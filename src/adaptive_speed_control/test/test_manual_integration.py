@@ -59,6 +59,7 @@ def test_controller_sole_publisher_forwarding(rclpy_init):
     node.last_cmd_linear = 0.30
     node.control_loop()
     assert node.last_cmd_linear == 0.30
+    assert node.safe_speed_limit == 0.30
     assert node.limit_reason == "CLEAR"
     node.destroy_node()
 
@@ -79,6 +80,7 @@ def test_controller_slowdown_and_limit_reason(rclpy_init):
 
     # Speed must be reduced significantly below requested 0.40
     assert node.last_cmd_linear < 0.30
+    assert 0.0 < node.safe_speed_limit < 0.30
     assert "OBSTACLE_AHEAD" in node.limit_reason
     assert "0.80 m" in node.limit_reason
     node.destroy_node()
@@ -101,6 +103,7 @@ def test_controller_safety_invariant_emergency_stop(rclpy_init):
 
     # SAFETY INVARIANT: Must immediately halt (v=0) even when adaptive mode is turned off!
     assert node.last_cmd_linear == 0.0
+    assert node.safe_speed_limit == 0.0
     assert "EMERGENCY_STOP" in node.limit_reason
     assert "0.35 m" in node.limit_reason
     node.destroy_node()

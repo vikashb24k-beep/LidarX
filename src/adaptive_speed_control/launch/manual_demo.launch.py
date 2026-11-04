@@ -41,6 +41,10 @@ def generate_launch_description():
         description='Path for metrics CSV output'
     )
     fault_profile_arg = DeclareLaunchArgument('fault_profile', default_value='none', description='LiDAR fault profile')
+    dashboard_arg = DeclareLaunchArgument(
+        'dashboard', default_value='true',
+        description='Launch the live graphical speed dashboard when a display is available'
+    )
 
     # 1. Gazebo Simulation & Robot Spawning
     sim_launch = IncludeLaunchDescription(
@@ -137,6 +141,15 @@ def generate_launch_description():
             output='screen',
         ))
 
+        actions.append(Node(
+            package='adaptive_speed_control',
+            executable='speed_dashboard_node',
+            name='speed_dashboard_node',
+            output='screen',
+            parameters=[{'use_sim_time': True}],
+            condition=IfCondition(LaunchConfiguration('dashboard'))
+        ))
+
         # Optional Challenge Scoring Node
         actions.append(Node(
             package='adaptive_speed_control',
@@ -172,8 +185,7 @@ def generate_launch_description():
                 "  To drive the robot with your keyboard, open a SECOND TERMINAL and run:\n"
                 "      ros2 run adaptive_speed_control keyboard_teleop_node\n"
                 "\n"
-                "  To open the live interaction dashboard in real time, run:\n"
-                "      ros2 run adaptive_speed_control manual_dashboard_node\n"
+                "  Live speed dashboard: enabled by default (set dashboard:=false to disable).\n"
                 "================================================================================\n"
         ))
 
@@ -188,6 +200,7 @@ def generate_launch_description():
         challenge_arg,
         csv_file_arg,
         fault_profile_arg,
+        dashboard_arg,
         sim_launch,
         OpaqueFunction(function=setup_manual_demo),
     ])

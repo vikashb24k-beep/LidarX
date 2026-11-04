@@ -7,7 +7,7 @@ from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, Point
 from visualization_msgs.msg import Marker, MarkerArray
-from std_msgs.msg import ColorRGBA
+from std_msgs.msg import ColorRGBA, Float32
 
 from adaptive_speed_interfaces.msg import ObstacleInfo, RobotStatus
 from adaptive_speed_control.utils.geometry_utils import euclidean_distance
@@ -43,6 +43,9 @@ class OdometryMonitorNode(Node):
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.on_odom, 10)
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.on_cmd_vel, 10)
         self.obs_sub = self.create_subscription(ObstacleInfo, '/obstacle_info', self.on_obstacle_info, 10)
+        self.safe_limit_sub = self.create_subscription(
+            Float32, '/safe_speed_limit', self.on_safe_speed_limit, 10
+        )
 
         # Telemetry & Marker Publishers
         self.status_pub = self.create_publisher(RobotStatus, '/robot_status', 10)
@@ -132,6 +135,9 @@ class OdometryMonitorNode(Node):
 
     def on_cmd_vel(self, msg: Twist):
         self.commanded_speed = msg.linear.x
+
+    def on_safe_speed_limit(self, msg: Float32):
+        self.speed_limit = max(0.0, float(msg.data))
 
     def on_obstacle_info(self, msg: ObstacleInfo):
         self.current_zone = msg.zone
