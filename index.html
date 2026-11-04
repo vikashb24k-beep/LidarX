@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ROS 2 LiDAR Safety Controller — Launch Panel</title>
+  <style>
+    :root { --bg:#09131f; --panel:#122234; --line:#294158; --text:#eaf2fa; --muted:#a9bdcf; --accent:#36d399; --blue:#60a5fa; --warn:#fbbf24; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:radial-gradient(circle at 20% 0%, #173a55, var(--bg) 52%); color:var(--text); font:16px/1.5 system-ui, sans-serif; }
+    main { width:min(1060px, calc(100% - 32px)); margin:40px auto 64px; }
+    h1 { margin:0; font-size:clamp(1.8rem, 4vw, 2.8rem); }
+    h2 { margin-top:0; font-size:1.1rem; }
+    .lead, .hint { color:var(--muted); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(270px, 1fr)); gap:18px; margin:26px 0; }
+    .panel { background:color-mix(in srgb, var(--panel) 94%, transparent); border:1px solid var(--line); border-radius:14px; padding:22px; box-shadow:0 16px 34px #0003; }
+    label { display:block; margin:14px 0 6px; font-weight:700; }
+    select { width:100%; padding:11px; border:1px solid var(--line); border-radius:8px; background:#091824; color:var(--text); font:inherit; }
+    .check { display:flex; gap:10px; align-items:center; margin:13px 0; color:var(--text); font-weight:400; }
+    input { accent-color:var(--accent); width:18px; height:18px; }
+    .tag { display:inline-block; margin-top:8px; padding:4px 9px; color:#062416; background:var(--accent); border-radius:999px; font-size:.82rem; font-weight:800; }
+    pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:10px 0 0; padding:14px; border-radius:9px; background:#07111b; border:1px solid #20384d; color:#d9f5e8; font:13px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    button { margin-top:10px; padding:9px 13px; border:0; border-radius:8px; background:var(--blue); color:#07111b; font-weight:800; cursor:pointer; }
+    button:hover { filter:brightness(1.1); }
+    .terminal { margin-top:18px; }
+    .terminal h3 { margin-bottom:0; }
+    table { width:100%; border-collapse:collapse; }
+    td { padding:8px; border-bottom:1px solid var(--line); }
+    td:first-child { width:34%; color:var(--accent); font-family:ui-monospace, monospace; font-weight:800; }
+    .notice { border-left:4px solid var(--warn); padding-left:12px; color:#f8d887; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>LiDAR Safety Controller Launch Panel</h1>
+    <p class="lead">Choose a scenario and options. Copy each generated command into the indicated terminal.</p>
+
+    <section class="grid">
+      <div class="panel">
+        <h2>1. Choose simulation</h2>
+        <label for="scenario">Scenario</label>
+        <select id="scenario">
+          <option value="1">1 — Open corridor (straight route)</option>
+          <option value="2">2 — Moderate corridor</option>
+          <option value="3">3 — Cluttered corridor</option>
+          <option value="4">4 — Barrier corridor</option>
+          <option value="5" selected>5 — Warehouse</option>
+          <option value="6">6 — Hospital</option>
+        </select>
+        <label class="check"><input id="autostart" type="checkbox" checked> Start autonomous route</label>
+        <label class="check"><input id="headless" type="checkbox"> Run without Gazebo GUI</label>
+        <label class="check"><input id="speedDashboard" type="checkbox"> Open graphical speed dashboard</label>
+        <p id="scenarioNote" class="hint"></p>
+        <span class="tag" id="routeLabel">Warehouse route</span>
+      </div>
+
+      <div class="panel">
+        <h2>2. Keyboard controls</h2>
+        <p class="hint">Start keyboard teleoperation in a second terminal after the simulation starts. It takes priority over the autonomous route.</p>
+        <table>
+          <tr><td>W / S</td><td>Forward / reverse</td></tr>
+          <tr><td>A / D</td><td>Turn left / right</td></tr>
+          <tr><td>Q / E</td><td>Forward-left / forward-right</td></tr>
+          <tr><td>X / Space</td><td>Stop</td></tr>
+          <tr><td>+ / −</td><td>Increase / reduce speed limit</td></tr>
+          <tr><td>T</td><td>Toggle manual / autonomous mode</td></tr>
+          <tr><td>H</td><td>Show all controls</td></tr>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel terminal">
+      <h2>Terminal 1 — Start the selected scenario</h2>
+      <pre id="launchCommand"></pre>
+      <button data-copy="launchCommand">Copy launch command</button>
+    </section>
+
+    <section class="grid">
+      <div class="panel terminal">
+        <h2>Terminal 2 — Keyboard teleoperation</h2>
+        <pre id="teleopCommand">source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 run adaptive_speed_control keyboard_teleop_node</pre>
+        <button data-copy="teleopCommand">Copy keyboard command</button>
+      </div>
+      <div class="panel terminal">
+        <h2>Terminal 3 — Manual terminal dashboard</h2>
+        <pre id="manualDashboardCommand">source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 run adaptive_speed_control manual_dashboard_node</pre>
+        <button data-copy="manualDashboardCommand">Copy dashboard command</button>
+      </div>
+    </section>
+
+    <p class="notice">Run one scenario at a time. Before changing the scenario, press <strong>Ctrl+C</strong> in Terminal 1 and close the Gazebo window. Otherwise an old Gazebo world can remain visible.</p>
+  </main>
+
+  <script>
+    const scenarioDetails = {
+      1: ['Straight route: (-9, 0) → (9, 0)', 'Open corridor / straight route'],
+      2: ['Moderate corridor route', 'Moderate corridor route'],
+      3: ['Cluttered corridor route', 'Cluttered corridor route'],
+      4: ['Barrier corridor route', 'Barrier corridor route'],
+      5: ['Warehouse route: six waypoints, ending at (8, 0)', 'Warehouse route'],
+      6: ['Hospital route: six waypoints, ending at (7.5, 4)', 'Hospital route']
+    };
+    const base = 'source /opt/ros/jazzy/setup.bash\nsource install/setup.bash\n';
+    const scenario = document.querySelector('#scenario');
+    const autostart = document.querySelector('#autostart');
+    const headless = document.querySelector('#headless');
+    const speedDashboard = document.querySelector('#speedDashboard');
+
+    function updateLaunchCommand() {
+      const id = scenario.value;
+      const args = [`scenario:=${id}`, `autostart:=${autostart.checked}`];
+      if (headless.checked) args.push('headless:=true');
+      if (speedDashboard.checked) args.push('dashboard:=true');
+      document.querySelector('#launchCommand').textContent = base +
+        'ros2 launch adaptive_speed_control full_demo.launch.py ' + args.join(' ');
+      document.querySelector('#scenarioNote').textContent = scenarioDetails[id][0];
+      document.querySelector('#routeLabel').textContent = scenarioDetails[id][1];
+    }
+
+    document.querySelectorAll('select, input').forEach(el => el.addEventListener('change', updateLaunchCommand));
+    document.querySelectorAll('[data-copy]').forEach(button => button.addEventListener('click', async () => {
+      const text = document.querySelector(`#${button.dataset.copy}`).textContent;
+      await navigator.clipboard.writeText(text);
+      const old = button.textContent;
+      button.textContent = 'Copied';
+      setTimeout(() => { button.textContent = old; }, 1200);
+    }));
+    updateLaunchCommand();
+  </script>
+</body>
+</html>

@@ -4,6 +4,7 @@ import sys
 import time
 
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
@@ -88,7 +89,7 @@ class ManualDashboardNode(Node):
 
     def on_odom(self, msg: Odometry):
         q = msg.pose.pose.orientation
-        yaw = quaternion_to_yaw(q.x, q.y, q.z, q.w)
+        yaw = quaternion_to_yaw(q)
         self.heading_deg = math.degrees(yaw)
 
     def _speed_color(self, speed: float) -> str:
@@ -169,7 +170,7 @@ def main(args=None):
     node = ManualDashboardNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()
