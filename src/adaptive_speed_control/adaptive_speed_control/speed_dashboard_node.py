@@ -8,6 +8,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Float32
 from adaptive_speed_interfaces.msg import ObstacleInfo, RobotStatus
 
 
@@ -56,6 +57,9 @@ class SpeedDashboardNode(Node):
         self.obstacle_sub = self.create_subscription(ObstacleInfo, '/obstacle_info', self.on_obstacle_info, 10)
         self.odom_sub = self.create_subscription(Odometry, '/odom', self.on_odom, 10)
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.on_cmd_vel, 10)
+        self.safe_limit_sub = self.create_subscription(
+            Float32, '/safe_speed_limit', self.on_safe_speed_limit, 10
+        )
 
         if not self.has_display:
             self.get_logger().info(
@@ -105,6 +109,10 @@ class SpeedDashboardNode(Node):
 
     def on_cmd_vel(self, msg: Twist):
         self.current_cmd = msg.linear.x
+
+    def on_safe_speed_limit(self, msg: Float32):
+        """Use the controller's computed limit instead of the static speed cap."""
+        self.current_limit = max(0.0, float(msg.data))
 
     def _init_plots(self):
         # 1. Gauge Bar
@@ -204,4 +212,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-

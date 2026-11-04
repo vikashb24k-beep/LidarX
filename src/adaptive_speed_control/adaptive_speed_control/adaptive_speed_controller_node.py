@@ -106,6 +106,9 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
         self.time_to_collision = -1.0
         self.effective_margin = self.threshold
         self.control_mode = "MANUAL"
+        # Policy output before the acceleration ramp. Dashboards use this to
+        # show the live safety limit rather than the configured maximum.
+        self.safe_speed_limit = 0.0
 
         # Conservative 2-of-3 scan temporal filter
         self.clearance_history = deque(maxlen=3)
@@ -174,6 +177,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
         self.info_pub = self.create_publisher(ObstacleInfo, '/obstacle_info', 10)
         self.density_pub = self.create_publisher(Float32, '/obstacle_density', 10)
+        self.safe_limit_pub = self.create_publisher(Float32, '/safe_speed_limit', 10)
 
         # Services
         self.th_srv = self.create_service(
@@ -402,6 +406,13 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
         info.clearance = float(self.effective_clearance)
         self.info_pub.publish(info)
 
+    def _publish_safe_speed_limit(self, speed: float):
+        """Publish the current forward policy limit for dashboards and logs."""
+        self.safe_speed_limit = max(0.0, float(speed))
+        msg = Float32()
+        msg.data = self.safe_speed_limit
+        self.safe_limit_pub.publish(msg)
+
     def control_loop(self):
         # Enforce lifecycle state: only publish while active!
         if hasattr(self, '_state_machine') and self._state_machine.current_state[1] != 'active':
@@ -415,6 +426,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
             self.safety_state = "DESTINATION_REACHED"
             self.limit_reason = "CLEAR"
             self.cmd_pub.publish(Twist())
+            self._publish_safe_speed_limit(0.0)
             self._publish_obstacle_info()
             self._log_status(0.0, 0.0, 0.0)
             return
@@ -429,6 +441,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
             self.speed_scale = 0.0
             self.time_to_collision = -1.0
             self.cmd_pub.publish(Twist())
+            self._publish_safe_speed_limit(0.0)
             self._publish_obstacle_info()
             self._log_status(0.0, 0.0, 0.0)
             return
@@ -445,6 +458,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
             self.speed_scale = 0.0
             self.time_to_collision = -1.0
             self.cmd_pub.publish(Twist())
+            self._publish_safe_speed_limit(0.0)
             self._publish_obstacle_info()
             self._log_status(0.0, 0.0, 0.0)
             return
@@ -474,6 +488,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
             self.limit_reason = f"EMERGENCY_STOP ({self.front_distance:.2f} m)"
             self.last_cmd_linear = 0.0
             self.cmd_pub.publish(Twist())
+            self._publish_safe_speed_limit(0.0)
             self.scale_distance = 0.0
             self.speed_scale = 0.0
             self._publish_obstacle_info()
@@ -490,6 +505,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
             cmd.angular.z = float(omega_cmd)
             self.cmd_pub.publish(cmd)
             self.last_cmd_linear = v_cmd
+            self._publish_safe_speed_limit(abs(v_cmd))
             self._publish_obstacle_info()
             return
 
@@ -501,6 +517,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
             cmd.angular.z = float(omega_cmd)
             self.cmd_pub.publish(cmd)
             self.last_cmd_linear = 0.0
+            self._publish_safe_speed_limit(0.0)
             self._publish_obstacle_info()
             return
 
@@ -543,6 +560,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
 
         self.last_cmd_linear = v_cmd
         self.safety_state = next_state
+        self._publish_safe_speed_limit(v_target)
 
         # Diagnostics telemetry fields
         self.scale_distance = compute_distance_factor(self.effective_clearance, self.threshold, self.slowdown_distance)
