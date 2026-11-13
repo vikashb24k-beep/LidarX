@@ -241,6 +241,21 @@ def compute_density_factor(density: float, density_influence: float = 0.60, c_mi
     return max(c_min, min(1.0, 1.0 - density_influence * dens_clamped))
 
 
+def apply_density_deadband(density: float, free_density: float = 0.0) -> float:
+    """Remove normal sparse LiDAR returns before applying a clutter penalty.
+
+    A few close rays are expected in an otherwise traversable corridor (walls,
+    furniture beside the path, or sensor noise).  ``free_density`` defines the
+    fraction of close front rays that is still considered open space.  Values
+    above it are re-scaled to [0, 1], preserving a monotonic clutter response.
+    """
+    rho = max(0.0, min(1.0, density))
+    free = max(0.0, min(0.95, free_density))
+    if rho <= free:
+        return 0.0
+    return (rho - free) / (1.0 - free)
+
+
 def compute_time_to_collision(front_dist: float, current_speed: float) -> float:
     """
     Computes time-to-collision in seconds, or -1.0 if not closing.
@@ -505,6 +520,8 @@ def layered_braking_cap(clearance: float, d0: float, a_brake: float, latency: fl
 
     Solves d_c - d0 = v*t_lat + v^2/(2*a) for the non-negative root.
     """
+    if isinstance(clearance, (int, float)) and math.isinf(clearance) and clearance > 0:
+        return float('inf')
     clearance = _finite(clearance, 0.0)
     available = clearance - max(0.0, _finite(d0, 0.45))
     if available <= 0.0:
@@ -531,26 +548,43 @@ def policy_layered_governor(
     ``profile_caps`` is an iterable of ``(distance_along_path, cap)`` pairs.
     """
     request = max(0.0, _finite(v_req, 0.0))
-    clearance = _finite(d_clear, 0.0)
-    safety = layered_braking_cap(clearance, d0, a_brake, scan_latency)
-    if not math.isfinite(safety):
+    is_inf_clearance = isinstance(d_clear, (int, float)) and math.isinf(d_clear) and d_clear > 0.0
+    if is_inf_clearance:
+        clearance = float('inf')
+        safety = float('inf')
+        comfort_scale = 1.0
+    else:
+        clearance = _finite(d_clear, 0.0)
+        safety = layered_braking_cap(clearance, d0, a_brake, scan_latency)
+        span = max(1e-3, _finite(comfort_distance, 2.0) - d0)
+        comfort_scale = smoothstep01((clearance - d0) / span)
+    if not math.isfinite(safety) and safety <= 0.0:
         safety = 0.0
-    # Comfort is soft: it eases from creep to request, and confidence affects
-    # only this term, never the physical stopping envelope.
-    span = max(1e-3, _finite(comfort_distance, 2.0) - d0)
-    comfort_scale = smoothstep01((clearance - d0) / span)
     confidence = max(0.0, min(1.0, _finite(confidence, 0.0)))
     comfort = request * (confidence * comfort_scale)
     width_needed = max(1e-3, _finite(robot_width, .35) + 2.0 * max(0.0, _finite(lateral_margin, .08)))
-    width_scale = smoothstep01((_finite(lateral_free_width, 0.0) - width_needed) / width_needed)
+    # ``inf`` is the evaluator's explicit "no lateral constraint" default;
+    # it must remain fully open rather than being sanitised to zero.
+    if isinstance(lateral_free_width, (int, float)) and math.isinf(lateral_free_width) and lateral_free_width > 0.0:
+        width_scale = 1.0
+    else:
+        width_scale = smoothstep01((_finite(lateral_free_width, 0.0) - width_needed) / width_needed)
     lateral_cap = request * width_scale
     clutter_cap = request * max(0.0, 1.0 - max(0.0, min(1.0, _finite(rho_path, 1.0))) * max(0.0, _finite(rho_gain, .6)))
     kappa = abs(_finite(curvature, 0.0))
     turn_cap = request if kappa < 1e-6 else math.sqrt(max(1e-3, _finite(a_lat, .5)) / kappa)
     closing = max(0.0, _finite(closing_speed, 0.0))
-    ttc_cap = request if closing <= 1e-6 else max(0.0, clearance / max(1e-3, _finite(ttc_min, 1.0)))
-    goal = max(0.0, _finite(distance_to_goal, 0.0))
-    goal_cap = request * smoothstep01(goal / max(1e-3, _finite(goal_distance, 1.0)))
+    if is_inf_clearance:
+        ttc_cap = request
+    else:
+        ttc_cap = request if closing <= 1e-6 else max(0.0, clearance / max(1e-3, _finite(ttc_min, 1.0)))
+    # As with lateral width, an infinite goal distance means the caller has
+    # no active goal constraint (not that the robot is at its goal).
+    if isinstance(distance_to_goal, (int, float)) and math.isinf(distance_to_goal) and distance_to_goal > 0.0:
+        goal_cap = request
+    else:
+        goal = max(0.0, _finite(distance_to_goal, 0.0))
+        goal_cap = request * smoothstep01(goal / max(1e-3, _finite(goal_distance, 1.0)))
     profile_cap = request
     for distance, cap in profile_caps:
         distance, cap = _finite(distance, float('inf')), max(0.0, _finite(cap, 0.0))
@@ -601,7 +635,12 @@ def evaluate_speed_policy(
             scan_latency=kwargs.get('scan_latency', 0.0), confidence=kwargs.get('confidence', 1.0),
             profile_caps=kwargs.get('profile_caps', ()), d0=d_base, a_brake=a_brake,
             comfort_distance=kwargs.get('comfort_distance', d_slow),
-            v_creep=kwargs.get('v_creep', .05), a_dec=kwargs.get('a_dec', a_brake),
+            a_lat=kwargs.get('a_lat', .50), ttc_min=kwargs.get('ttc_min', 1.0),
+            goal_distance=kwargs.get('goal_distance', 1.0),
+            v_creep=kwargs.get('v_creep', .05), rho_gain=kwargs.get('rho_gain', .60),
+            robot_width=kwargs.get('robot_width', .35),
+            lateral_margin=kwargs.get('lateral_margin', .08),
+            a_dec=kwargs.get('a_dec', a_brake),
         )['speed']
     else:
         # Default to distance_density

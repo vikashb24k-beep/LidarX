@@ -4,6 +4,9 @@
     slowdown_distance: 2.00
     density_radius: 1.30
     density_influence: 0.60
+    # Ignore sparse close rays (e.g. corridor edges) before applying the
+    # clutter speed penalty. Obstacle clearance still triggers braking.
+    density_free_threshold: 0.15
     c_min: 0.25
     max_linear_speed: 0.40
     max_angular_speed: 1.00

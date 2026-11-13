@@ -33,6 +33,7 @@ from adaptive_speed_control.utils.speed_policy import (
     rate_limit_velocity,
     compute_distance_factor,
     compute_density_factor,
+    apply_density_deadband,
     compute_limit_reason,
     compute_time_to_collision,
 )
@@ -59,6 +60,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
         self.declare_parameter('slowdown_distance', 2.00)
         self.declare_parameter('density_radius', 1.30)
         self.declare_parameter('density_influence', 0.60)
+        self.declare_parameter('density_free_threshold', 0.15)
         self.declare_parameter('c_min', 0.25)
         self.declare_parameter('max_linear_speed', 0.40)
         self.declare_parameter('max_angular_speed', 1.00)
@@ -233,6 +235,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
         self.slowdown_distance = float(self.get_parameter('slowdown_distance').value)
         self.density_radius = float(self.get_parameter('density_radius').value)
         self.density_influence = float(self.get_parameter('density_influence').value)
+        self.density_free_threshold = float(self.get_parameter('density_free_threshold').value)
         self.c_min = float(self.get_parameter('c_min').value)
         self.max_linear_speed = float(self.get_parameter('max_linear_speed').value)
         self.max_angular_speed = float(self.get_parameter('max_angular_speed').value)
@@ -272,6 +275,10 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
                 if param.value < 0.0 or param.value > 1.0:
                     return SetParametersResult(successful=False, reason="density_influence must be between 0.0 and 1.0")
                 self.density_influence = float(param.value)
+            elif param.name == 'density_free_threshold':
+                if param.value < 0.0 or param.value >= 1.0:
+                    return SetParametersResult(successful=False, reason="density_free_threshold must be in [0.0, 1.0)")
+                self.density_free_threshold = float(param.value)
             elif param.name == 'adaptive_enabled':
                 self.adaptive_enabled = bool(param.value)
             elif param.name == 'enable_corridor_stop':
@@ -494,7 +501,10 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
             d_base=self.threshold,
             t_reaction=self.t_reaction,
             t_scan_latency=self.scan_latency,
-            a_brake=self.max_acceleration
+            # Braking capability is a safety property.  Keep it independent
+            # from the acceleration-ramp limit used to make normal speed
+            # increases smooth.
+            a_brake=self.governor_a_brake,
         )
         self.effective_margin = d_margin
 
@@ -539,6 +549,12 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
 
         # Forward motion: evaluate chosen speed policy
         v_clamped = min(v_req, self.max_linear_speed)
+        # Do not reduce speed for a small number of nearby rays caused by
+        # corridor walls or sensor noise.  Obstacle clearance remains a hard,
+        # independent safety input.
+        density_for_speed = apply_density_deadband(
+            self.obstacle_density, self.density_free_threshold
+        )
 
         if not self.adaptive_enabled:
             # Baseline fixed speed mode (emergency stop and failsafes still strictly active)
@@ -549,11 +565,11 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
                 policy_name=self.speed_policy,
                 v_req=v_clamped,
                 d_clear=self.effective_clearance,
-                density=self.obstacle_density,
+                density=density_for_speed,
                 d_margin=d_margin,
                 d_slow=self.slowdown_distance,
                 d_base=self.threshold,
-                a_brake=self.max_acceleration,
+                a_brake=self.governor_a_brake,
                 density_influence=self.density_influence,
                 c_min=self.c_min,
                 scan_latency=self.scan_latency,
@@ -563,7 +579,10 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
                 a_dec=self.governor_a_dec,
                 a_lat=self.governor_a_lat,
                 ttc_min=self.governor_ttc_min,
+                goal_distance=self.governor_goal_distance,
                 rho_gain=self.governor_rho_gain,
+                robot_width=self.footprint_cfg['width'],
+                lateral_margin=self.footprint_cfg['lateral_margin'],
             )
             # Environmental zone classification
             if self.effective_clearance < 1.35 or self.obstacle_density >= 0.30:
@@ -588,7 +607,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
 
         # Diagnostics telemetry fields
         self.scale_distance = compute_distance_factor(self.effective_clearance, self.threshold, self.slowdown_distance)
-        self.scale_density = compute_density_factor(self.obstacle_density, self.density_influence, self.c_min)
+        self.scale_density = compute_density_factor(density_for_speed, self.density_influence, self.c_min)
         self.speed_scale = (v_cmd / v_clamped) if v_clamped > 0 else 1.0
         self.time_to_collision = compute_time_to_collision(self.effective_clearance, abs(v_cmd))
         self.limit_reason = compute_limit_reason(
@@ -598,7 +617,7 @@ class AdaptiveSpeedControllerNode(LifecycleNode):
             # Report the measured front ray in the human-facing reason while
             # policy decisions continue to use footprint clearance above.
             front_dist=self.front_distance,
-            density=self.obstacle_density,
+            density=density_for_speed,
             threshold=self.threshold,
             slowdown_dist=self.slowdown_distance,
             density_influence=self.density_influence,

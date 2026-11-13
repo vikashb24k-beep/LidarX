@@ -1,6 +1,10 @@
 import math
 
-from adaptive_speed_control.utils.speed_policy import layered_braking_cap, policy_layered_governor
+from adaptive_speed_control.utils.speed_policy import (
+    evaluate_speed_policy,
+    layered_braking_cap,
+    policy_layered_governor,
+)
 
 
 def governor(**overrides):
@@ -39,3 +43,10 @@ def test_creep_and_rotation_contract():
     result = governor(d_clear=3., rho_path=.2)
     assert result['speed'] >= .05
     assert governor(d_clear=.4)['speed'] == 0.0
+
+
+def test_evaluator_forwards_clutter_gain_to_layered_governor():
+    """The launch-configured clutter gain must affect the selected policy."""
+    common = dict(policy_name='layered_governor', v_req=.4, d_clear=3.0,
+                  density=.5, d_margin=.45, d_base=.45, a_brake=.6)
+    assert evaluate_speed_policy(**common, rho_gain=.8) < evaluate_speed_policy(**common, rho_gain=.1)

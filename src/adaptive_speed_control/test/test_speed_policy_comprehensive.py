@@ -4,6 +4,7 @@ from adaptive_speed_control.utils.speed_policy import (
     calculate_adaptive_speed,
     process_laser_scan_sectors,
     rate_limit_velocity,
+    apply_density_deadband,
 )
 from adaptive_speed_control.utils.geometry_utils import (
     normalize_angle,
@@ -63,6 +64,13 @@ def test_monotonicity_density_scaling():
 
     for i in range(len(speeds) - 1):
         assert speeds[i] >= speeds[i + 1] - 1e-4, f"Speed increased from {speeds[i]} to {speeds[i+1]} as density increased!"
+
+
+def test_density_deadband_preserves_full_speed_in_sparse_space():
+    """Sparse side returns must not penalize a clear, open path."""
+    assert apply_density_deadband(0.10, free_density=0.15) == 0.0
+    assert math.isclose(apply_density_deadband(0.575, free_density=0.15), 0.5, abs_tol=1e-6)
+    assert apply_density_deadband(0.90, free_density=0.15) > apply_density_deadband(0.40, free_density=0.15)
 
 
 def test_emergency_stop_at_threshold():
