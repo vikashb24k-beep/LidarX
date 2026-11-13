@@ -24,10 +24,10 @@ class LifecycleManagerNode(Node):
         self.managed_nodes = list(self.get_parameter('managed_nodes').value)
         self.auto_activate = bool(self.get_parameter('auto_activate').value)
 
-        self.clients = {}
+        self.node_clients = {}
         for node_name in self.managed_nodes:
             srv_name = f'/{node_name}/change_state'
-            self.clients[node_name] = self.create_client(ChangeState, srv_name)
+            self.node_clients[node_name] = self.create_client(ChangeState, srv_name)
 
         if self.auto_activate:
             self.timer = self.create_timer(0.5, self._startup_sequence)
@@ -53,7 +53,7 @@ class LifecycleManagerNode(Node):
         self.get_logger().info("All managed lifecycle nodes successfully configured and activated.")
 
     def change_state(self, node_name: str, transition_id: int) -> bool:
-        client = self.clients.get(node_name)
+        client = self.node_clients.get(node_name)
         if not client:
             return False
 
