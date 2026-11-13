@@ -5,7 +5,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32
 from std_srvs.srv import Trigger
 
 from adaptive_speed_interfaces.msg import ObstacleInfo
@@ -42,7 +42,7 @@ class WaypointNavigatorNode(Node):
         self.declare_parameter('heading_gain', 1.80)
         self.declare_parameter('lookahead_dist', 1.50)
         self.declare_parameter('auto_start', True)
-        self.declare_parameter('stuck_timeout', 6.0)
+        self.declare_parameter('stuck_timeout', 8.0)
         self.declare_parameter('wait_timeout', 4.0)
         self.declare_parameter('navigation_timeout', 180.0)
         self.declare_parameter('waypoints', [float('nan')])
@@ -205,7 +205,11 @@ class WaypointNavigatorNode(Node):
         # Check final destination reached
         dist_to_goal = euclidean_distance(self.current_x, self.current_y, self.goal_x, self.goal_y)
         is_at_final_wp = (self.current_wp_idx >= len(self.waypoints) - 1)
-        straight_corridor_reached = (self.current_x >= (self.goal_x - self.goal_tolerance)) and abs(self.current_y - self.goal_y) < 1.0
+        straight_corridor_reached = (
+            abs(self.goal_y) < 0.1
+            and (self.current_x >= (self.goal_x - self.goal_tolerance))
+            and abs(self.current_y - self.goal_y) < 1.0
+        )
 
         if dist_to_goal <= self.goal_tolerance or (is_at_final_wp and dist_to_goal <= self.goal_tolerance * 1.5) or straight_corridor_reached:
             if not self.destination_reached:
