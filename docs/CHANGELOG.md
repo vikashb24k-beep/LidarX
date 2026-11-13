@@ -2,6 +2,17 @@
 
 All notable changes to the **LidarX** project are documented here.
 
+## [1.2.2] - Navigation Robustness and Governor Smoothness (2026-11-13)
+
+### Waypoint Navigator Enhancements
+- **Goal Condition Robustness**: Restrict corridor x-threshold bypass to linear corridor routes (`abs(goal_y) < 0.1`) so multi-turn scenarios (Warehouse, Hospital) rely on exact Euclidean distance and final waypoint verification.
+- **Dynamic Obstacle & Clutter Stuck Tolerance**: Increased `stuck_timeout` from 6.0s to 8.0s, avoiding spurious recovery triggers when crawling through tight spaces.
+
+### Speed Governor Smoothing
+- **Expanded Comfort Deceleration Zone**: Set `governor_comfort_distance` to 3.00m (up from 2.00m) to produce a gentler, more progressive deceleration ramp when approaching obstacles.
+- **Clutter Penalty Softening**: Tuned `governor_rho_gain` to 0.45 (from 0.60) to prevent excessive speed reduction caused by peripheral corridor clutter.
+- **Terminal Deceleration Window**: Extended `governor_goal_distance` to 1.50m for smoother arrival deceleration.
+
 ## [1.1.0] - Complex Worlds, Dynamic Obstacles & Visible Speed Displays (2026-11-03)
 
 ### New Worlds & Environments
