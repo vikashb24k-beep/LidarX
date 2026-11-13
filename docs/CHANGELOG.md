@@ -84,3 +84,11 @@ All notable changes to the **LidarX** project are documented here.
 - Wired fault injection, collision monitoring, and twist mux into autonomous and manual launch paths.
 - Routed keyboard/Gazebo key commands to `/cmd_vel_teleop` and waypoint navigation to `/cmd_vel_nav`.
 - Added entry points, bag ignore rule, replay and offline CSV analysis utilities.
+
+## [1.2.1] - Speed Governor Diagnostics and Infinite Clearance Fix (2026-11-13)
+
+### Fixed
+- **Infinite Clearance Zero-Speed Bug:** Fixed a critical bug in `speed_policy.py` where `_finite(clearance, 0.0)` coerced open space (`math.inf`) into 0.0m clearance. This caused `layered_governor` to evaluate open space as an imminent collision and command `v = 0.00 m/s`.
+- **Lookahead Envelope Parameter Clamping:** Fixed `lateral_free_width` and `distance_to_goal` when set to infinity so that lack of lateral constraint does not collapse the lookahead envelope to 0.0 m/s.
+- **Corridor Wall Clutter Deadband:** Added `apply_density_deadband` with `density_free_threshold: 0.15` to prevent static corridor sidewalls from penalizing linear speed when the swept corridor ahead is clear.
+- **Speed Adaptation Verification:** Confirmed that in Scenario 1 (open), the robot travels at 0.40 m/s; in Scenario 2 (moderate), speed drops to 0.29–0.35 m/s based on clutter density; in Scenario 4 (barrier), the robot smoothly decelerates and comes to a complete, safe stop at 0.45m without collision.

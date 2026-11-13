@@ -102,3 +102,11 @@ The CPU lidar fallback did not publish in this headless world. GPU lidar does pu
 - `twist_mux` is intentionally before the adaptive controller: teleop and navigation can be arbitrated, but neither can bypass the final `/cmd_vel` safety publisher.
 - Physical contact monitoring uses the Gazebo `Contacts` bridge with a footprint-clearance fallback. A positive-control collision run remains required before quoting zero-collision results.
 - The controller currently self-configures/self-activates for compatibility with existing launch files. The separately installed lifecycle manager is not launched because the waypoint navigator has not yet been converted to a lifecycle node; this is a known incomplete Phase C item.
+
+---
+
+## DECISION-008: Infinite Clearance and Deadband Handling in Layered Governor
+- **Date:** 2026-11-13
+- **Decision:** Explicitly preserve `math.inf` clearance as unconstrained/open space throughout `layered_braking_cap` and `policy_layered_governor`, and apply a clutter deadband (`density_free_threshold: 0.15`) against corridor sidewalls.
+- **Rationale:** The safety sanitiser `_finite(val, 0.0)` was erroneously replacing infinite range returns (`math.inf`, meaning no obstacles within LiDAR range) with `0.0`. This triggered a false emergency stop, choking commanded speed to 0.00 m/s even in completely clear corridors. Similarly, default values for `lateral_free_width` and `distance_to_goal` were infinite, which `_finite` collapsed into 0.0, zeroing out the forward lookahead envelope.
+- **Impact:** Open corridors and obstacle clearances now evaluate to full commanded speed (0.40 m/s). Speed smoothly scales down as obstacles or clutter enter range, and safely halts at the dynamic braking margin.
