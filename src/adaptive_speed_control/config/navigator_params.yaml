@@ -4,11 +4,11 @@
     start_y: 0.0
     goal_x: 9.0
     goal_y: 0.0
-    nominal_speed: 0.40
+    # Requested cruise speed; the safety controller can only reduce this.
+    nominal_speed: 0.75
     goal_tolerance: 0.35
     heading_gain: 1.80
     lookahead_dist: 1.50
     auto_start: true
     stuck_timeout: 5.0
     navigation_timeout: 120.0
-

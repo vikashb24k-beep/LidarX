@@ -8,9 +8,11 @@
     # clutter speed penalty. Obstacle clearance still triggers braking.
     density_free_threshold: 0.15
     c_min: 0.25
-    max_linear_speed: 0.40
+    # Presentation profile: cruise quickly in open space.  The layered
+    # governor, braking cap, LiDAR watchdog, and emergency stop remain active.
+    max_linear_speed: 0.75
     max_angular_speed: 1.00
-    max_acceleration: 0.60
+    max_acceleration: 1.00
     front_angle_deg: 60.0
     sensor_timeout: 0.50
     cmd_timeout: 0.50
@@ -19,14 +21,14 @@
     # LidarX layered speed governor (all values are SI units).
     speed_policy: layered_governor
     governor_v_creep: 0.05
-    # Wider comfort zone (3.0m vs 2.0m) starts braking earlier for smoother deceleration.
-    governor_comfort_distance: 3.00
-    governor_a_brake: 0.60
+    # Reach cruise speed sooner in a genuinely clear path, while braking and
+    # emergency-clearance constraints independently slow/stop the robot.
+    governor_comfort_distance: 2.20
+    governor_a_brake: 0.80
     governor_a_dec: 0.80
     governor_a_lat: 0.50
     governor_ttc_min: 1.00
     # Wider terminal deceleration window for smooth arrival at waypoints/goal.
     governor_goal_distance: 1.50
-    # Reduced rho_gain (0.45 vs 0.60) makes clutter less aggressively penalise speed.
-    governor_rho_gain: 0.45
+    governor_rho_gain: 0.55
     governor_release_time: 0.40

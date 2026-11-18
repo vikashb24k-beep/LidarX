@@ -17,7 +17,7 @@ def rclpy_init():
 def test_teleop_init(rclpy_init):
     node = KeyboardTeleopNode()
     assert node.control_mode == "MANUAL"
-    assert node.speed_limit == 0.40
+    assert node.speed_limit == 0.75
     assert node.adaptive_enabled is True
     node.destroy_node()
 

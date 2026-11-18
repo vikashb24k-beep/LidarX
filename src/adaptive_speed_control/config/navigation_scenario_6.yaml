@@ -5,7 +5,7 @@
     start_yaw: 0.0
     goal_x: 7.5
     goal_y: 4.0
-    nominal_speed: 0.38
+    nominal_speed: 0.70
     goal_tolerance: 0.45
     waypoint_tolerance: 0.70
     heading_gain: 2.00
@@ -23,4 +23,3 @@
       5.0, 3.8,
       7.5, 4.0
     ]
-

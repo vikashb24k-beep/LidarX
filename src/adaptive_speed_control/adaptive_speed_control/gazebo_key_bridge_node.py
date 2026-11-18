@@ -16,9 +16,9 @@ class GazeboKeyBridgeNode(Node):
     def __init__(self):
         super().__init__('gazebo_key_bridge_node')
 
-        self.declare_parameter('key_timeout', 0.35)
+        self.declare_parameter('key_timeout', 0.80)
         self.declare_parameter('speed_step', 0.05)
-        self.declare_parameter('default_speed_limit', 0.40)
+        self.declare_parameter('default_speed_limit', 0.75)
 
         self.key_timeout = float(self.get_parameter('key_timeout').value)
         self.speed_step = float(self.get_parameter('speed_step').value)
@@ -36,6 +36,10 @@ class GazeboKeyBridgeNode(Node):
         self.target_linear = 0.0
         self.target_angular = 0.0
         self.last_key_time = 0.0
+        # Do not publish idle zero commands.  A terminal keyboard teleop node
+        # may share /cmd_vel_teleop, and an idle bridge must not overwrite its
+        # commands in twist_mux.
+        self.motion_active = False
         self.control_mode = "MANUAL"
         self.adaptive_enabled = True
 
@@ -51,35 +55,44 @@ class GazeboKeyBridgeNode(Node):
         if key_code in (87, 119):  # 'w' or 'W'
             self.target_linear = min(self.speed_limit, max(0.10, self.target_linear + self.speed_step))
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (83, 115):  # 's' or 'S'
             self.target_linear = max(-self.speed_limit, min(-0.10, self.target_linear - self.speed_step))
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (65, 97):  # 'a' or 'A'
             self.target_angular = min(1.0, max(0.30, self.target_angular + 0.25))
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (68, 100):  # 'd' or 'D'
             self.target_angular = max(-1.0, min(-0.30, self.target_angular - 0.25))
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (81, 113):  # 'q' or 'Q'
             self.target_linear = min(self.speed_limit, max(0.10, self.target_linear + self.speed_step))
             self.target_angular = min(1.0, max(0.30, self.target_angular + 0.25))
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (69, 101):  # 'e' or 'E'
             self.target_linear = min(self.speed_limit, max(0.10, self.target_linear + self.speed_step))
             self.target_angular = max(-1.0, min(-0.30, self.target_angular - 0.25))
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (90, 122):  # 'z' or 'Z'
             self.target_linear = max(-self.speed_limit, min(-0.10, self.target_linear - self.speed_step))
             self.target_angular = max(-1.0, min(-0.30, self.target_angular - 0.25))
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (67, 99):  # 'c' or 'C'
             self.target_linear = max(-self.speed_limit, min(-0.10, self.target_linear - self.speed_step))
             self.target_angular = min(1.0, max(0.30, self.target_angular + 0.25))
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (32, 88, 120):  # Space or 'x'
             self.target_linear = 0.0
             self.target_angular = 0.0
             self.last_key_time = now
+            self.motion_active = True
         elif key_code in (84, 116):  # 't'
             self.control_mode = "AUTONOMOUS" if self.control_mode == "MANUAL" else "MANUAL"
             self.mode_pub.publish(String(data=self.control_mode))
@@ -95,10 +108,18 @@ class GazeboKeyBridgeNode(Node):
         if self.control_mode != "MANUAL":
             return
 
+        # Stay silent until the Gazebo window is used for control.  This lets
+        # keyboard_teleop_node be the only publisher when it is in use.
+        if not self.motion_active:
+            return
+
         now = time.time()
         if (now - self.last_key_time) > self.key_timeout:
             self.target_linear = 0.0
             self.target_angular = 0.0
+            # Publish exactly one stop command, then relinquish the shared
+            # teleop topic instead of continually overwriting another input.
+            self.motion_active = False
 
         msg = Twist()
         msg.linear.x = float(self.target_linear)

@@ -11,6 +11,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     pkg_control = get_package_share_directory('adaptive_speed_control')
     pkg_sim = get_package_share_directory('adaptive_speed_simulation')
+    controller_config = os.path.join(pkg_control, 'config', 'adaptive_speed_params.yaml')
 
     scenario_arg = DeclareLaunchArgument(
         'scenario', default_value='5',
@@ -101,17 +102,17 @@ def generate_launch_description():
             executable='adaptive_speed_controller_node',
             name='adaptive_speed_controller_node',
             output='screen',
-            parameters=[{
-                'adaptive_enabled': LaunchConfiguration('adaptive'),
-                'threshold': 0.45,
-                'slowdown_distance': 2.00,
-                'density_radius': 1.30,
-                'density_influence': 0.60,
-                'max_linear_speed': 0.40,
-                'max_acceleration': 0.60,
-                'enable_corridor_stop': False,
-                'use_sim_time': True,
-            }]
+            # Use the same presentation-tuned, layered safety profile as the
+            # autonomous demo.  Teleoperation remains upstream of this node
+            # and can never bypass its braking, stop, or timeout protections.
+            parameters=[
+                controller_config,
+                {
+                    'adaptive_enabled': LaunchConfiguration('adaptive'),
+                    'enable_corridor_stop': False,
+                    'use_sim_time': True,
+                },
+            ]
         ))
         actions.append(Node(
             package='adaptive_speed_control', executable='collision_monitor_node',
@@ -127,7 +128,7 @@ def generate_launch_description():
             parameters=[{
                 'goal_x': goal_x,
                 'goal_y': goal_y,
-                'speed_limit': 0.40,
+                'speed_limit': 0.75,
                 'log_rate': 1.5,
                 'use_sim_time': True,
             }]

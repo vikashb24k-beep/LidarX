@@ -21,7 +21,7 @@ HELP_TEXT = """
 =============================================================================
                     KEYBOARD TELEOP CONTROLLER (20 Hz)
 =============================================================================
- Motion Controls (Hold-to-move, expires after 0.3s):
+ Motion Controls (Hold-to-move, expires after 0.8s):
    w / s        : Increase / Decrease forward speed request
    a / d        : Turn left / Turn right
    q / e        : Forward-Left / Forward-Right
@@ -31,7 +31,7 @@ HELP_TEXT = """
 
  Speed & Configuration:
    + / -        : Raise / Lower max requested speed limit (+/- 0.05 m/s)
-   r            : Reset speed limit to default (0.40 m/s)
+   r            : Reset speed limit to default (0.75 m/s)
    t            : Toggle MANUAL / AUTONOMOUS navigation mode
    m            : Toggle Adaptive Speed Scaling ON / OFF
                   *SAFETY INVARIANT: EMERGENCY STOP & TIMEOUTS STAY ALWAYS ACTIVE*
@@ -53,11 +53,14 @@ class KeyboardTeleopNode(Node):
     def __init__(self):
         super().__init__('keyboard_teleop_node')
 
-        self.declare_parameter('key_timeout', 0.30)
+        # Typical terminal key-repeat has an initial delay of about 0.5 s.
+        # Keep the command alive through that delay, while still making a
+        # released key fail safe shortly afterwards.
+        self.declare_parameter('key_timeout', 0.80)
         self.declare_parameter('publish_rate', 20.0)
         self.declare_parameter('linear_step', 0.05)
         self.declare_parameter('angular_step', 0.25)
-        self.declare_parameter('default_speed_limit', 0.40)
+        self.declare_parameter('default_speed_limit', 0.75)
         self.declare_parameter('max_allowed_speed', 1.00)
         self.declare_parameter('min_allowed_speed', 0.05)
 
